@@ -12,7 +12,8 @@
                 <div>
                     <label for="username" class="block text-sm font-medium leading-6 text-gray-900">Username address</label>
                     <div class="mt-2">
-                        <input tabindex="1" autofocus id="username" name="username" type="username" autocomplete="username"
+                        <input v-model="username" tabindex="1" autofocus id="username" name="username" type="username"
+                            autocomplete="username"
                             class="px-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                     </div>
                 </div>
@@ -25,7 +26,8 @@
                         </div>
                     </div>
                     <div class="mt-2">
-                        <input tabindex="1" id="password" name="password" type="password" autocomplete="current-password"
+                        <input ref="passwordEl" v-model="password" tabindex="1" id="password" name="password" type="password"
+                            autocomplete="current-password"
                             class="px-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                     </div>
                 </div>
@@ -49,11 +51,49 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import axios from '@/axiosConfig'
+import { inject, ref } from 'vue'
+import { useAccountStore } from '@/stores/account';
+import { useSocketStore } from '@/stores/socket';
 
 const router = useRouter()
+const passwordEl = ref(null)
+const username = ref('user')
+const password = ref('1234')
+const cookies = inject('$cookies')
+const accountStore = useAccountStore()
+const socketStore = useSocketStore()
+
+
+function resetPassword() {
+    password.value = ''
+    passwordEl.value.focus()
+}
 
 function onLogin() {
+    axios.post('/login', {
+        username: username.value,
+        password: password.value
+    })
+        .then(result => {
+            const data = result.data
+            const { status, accessToken } = data
 
-    router.push('/')
+            if (status == 'success') {
+                cookies.set('access_token', accessToken, '7d')
+                accountStore.fetchAccount(accessToken)
+                socketStore.connectToSocketServer()
+                router.push({ name: 'home' })
+            } else {
+                alert('Tài khoản hoặc mật khẩu không hợp lệ!')
+                resetPassword()
+            }
+
+        })
+        .catch(err => {
+            console.log(err)
+            alert('Có lỗi xảy ra, hãy thử lại sau...')
+            resetPassword()
+        })
 }
 </script>

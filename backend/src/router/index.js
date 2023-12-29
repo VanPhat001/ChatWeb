@@ -2,9 +2,12 @@ const router = require('express').Router()
 const jwt = require('jsonwebtoken')
 
 const accountService = require('../services/accountService')
-const accountRouter = require('./accountRouter')
+const { authenToken } = require('../helpers')
 
-router.use('/account', accountRouter)
+router.use('/account', require('./accountRouter'))
+router.use('/roomContainer', require('./roomContainerRouter'))
+router.use('/room', require('./roomRouter'))
+router.use('/message', require('./messageRouter'))
 
 router.post('/login', async (req, res, next) => {
     const { username, password } = req.body
@@ -26,6 +29,11 @@ router.post('/login', async (req, res, next) => {
         next(error)
     }
 })
+
+router.post('/verify', authenToken, (req, res) => {
+    res.send({ status: 'success' })
+})
+
 
 
 module.exports = router

@@ -17,10 +17,7 @@ class PostContainerService {
 
     updateOne(id, payload) {
         removeNullProps(payload)
-        return this.PostContainer.updateOne({
-            _id: id,
-            ...payload
-        })
+        return this.PostContainer.updateOne({ _id: id }, { ...payload })
     }
 
     delete(payload) {

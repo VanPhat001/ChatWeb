@@ -18,6 +18,11 @@ const router = createRouter({
       name: 'chat',
       component: () => import('../views/ChatView.vue')
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'error',
+      component: () => import('../views/ErrorView.vue')
+    }
   ]
 })
 

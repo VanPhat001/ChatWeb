@@ -17,10 +17,7 @@ class RequestAddFriendContainerService {
 
     updateOne(id, payload) {
         removeNullProps(payload)
-        return this.RequestAddFriendContainer.updateOne({
-            _id: id,
-            ...payload
-        })
+        return this.RequestAddFriendContainer.updateOne({ _id: id }, { ...payload })
     }
 
     delete(payload) {

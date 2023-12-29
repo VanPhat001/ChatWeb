@@ -17,10 +17,7 @@ class AccountService {
 
     updateOne(id, payload) {
         removeNullProps(payload)
-        return this.Account.updateOne({
-            _id: id,
-            ...payload
-        })
+        return this.Account.updateOne({ _id: id }, { ...payload })
     }
 
     delete(payload) {

@@ -17,10 +17,7 @@ class RoomContainerService {
 
     updateOne(id, payload) {
         removeNullProps(payload)
-        return this.RoomContainer.updateOne({
-            _id: id,
-            ...payload
-        })
+        return this.RoomContainer.updateOne({ _id: id }, { ...payload })
     }
 
     delete(payload) {
