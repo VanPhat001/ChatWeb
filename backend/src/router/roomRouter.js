@@ -16,7 +16,10 @@ router.get('/:id', authenToken, async (req, res, next) => {
     try {
         const messageDocs = await messageService.getAll({
             roomId: id
-        }).sort({ createdAt: 'desc' }).limit(messageCount)
+        })
+        .sort({ createdAt: 'desc' })
+        .limit(messageCount)
+        .sort({ createdAt: 'asc' })
 
         res.send({ status: 'success', messages: messageDocs })
     } catch (error) {

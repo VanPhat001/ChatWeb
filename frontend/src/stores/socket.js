@@ -5,6 +5,7 @@ import { ref } from "vue"
 
 export const useSocketStore = defineStore('socket', () => {
     const socket = ref(null)
+    const resSendMessageActions = []
 
     function connectToSocketServer() {
         if (socket.value !== null) {
@@ -22,10 +23,25 @@ export const useSocketStore = defineStore('socket', () => {
             // console.log(_socket.id);
             socket.value = null
         })
+
+
+        _socket.on('res-send-message', data => {
+            resSendMessageActions.forEach(func => func(data))
+        })
+    }
+
+    function registerClientInfo(accountId) {
+        if (socket.value === null) {
+            console.log('socket is null')
+            return
+        }
+
+        socket.value.emit('register-client-info', { accountId })
     }
 
     return {
-        socket, 
-        connectToSocketServer
+        socket, resSendMessageActions, 
+        connectToSocketServer,
+        registerClientInfo
     }
 })

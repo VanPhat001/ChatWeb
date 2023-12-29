@@ -17,7 +17,7 @@ router.post('/:accountId', authenToken, async (req, res, next) => {
             text
         })
 
-        await roomService.updateOne(_id, {
+        await roomService.updateOne(roomId, {
             latestMessageId: messageDoc._id
         })
 

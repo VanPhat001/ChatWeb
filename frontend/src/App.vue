@@ -7,6 +7,7 @@
       <RouterView></RouterView>
       <!-- <NuxtWelcome /> -->
     </main>
+    <Loading v-if="showNavbar"></Loading>
   </div>
 </template>
 
@@ -18,6 +19,7 @@ import router from './router'
 import axios from '@/axiosConfig'
 import { useAccountStore } from '@/stores/account'
 import { useSocketStore } from './stores/socket'
+import Loading from '@/components/Loading.vue'
 
 const route = useRoute()
 const mainEl = ref(null)
@@ -42,9 +44,19 @@ axios.post('/verify')
 
     accountStore.fetchAccount(accessToken)
     socketStore.connectToSocketServer()
+
+    const id = setInterval(() => {
+      if (socketStore.socket != null) {
+        clearInterval(id)
+      }
+
+      socketStore.registerClientInfo(accountStore._id)
+      document.getElementsByClassName('loading')[0]?.remove()
+    }, 100)
   })
   .catch(err => {
     console.log(err)
+    router.push({ name: 'login'})
   })
 
 const showNavbar = computed(() => route.name != 'login' && route.name != 'error')

@@ -13,22 +13,19 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 
 
-// const express = require("express");
-const { createServer } = require("http");
-const { Server } = require("socket.io");
-
-// const app = express();
-const httpServer = createServer(app);
+// ======================== socket config ========================
+const { createServer } = require("http")
+const { Server } = require("socket.io")
+const httpServer = createServer(app)
+const socketConfig = require('./src/socketConfig')
 const io = new Server(httpServer, {
     cors: '*'
-});
-
-io.on("connection", (socket) => {
-    console.log('Have a client connect to server, id ' + socket.id)
 })
 
+io.on("connection", socket => socketConfig(io, socket))
 
 
+// ======================== nodejs config ========================
 app.use('/api', require('./src/router'))
 app.use('/admin', require('./src/router/adminRouter'))
 
@@ -38,7 +35,7 @@ app.use((err, req, res, next) => {
 })
 
 
-
+// ======================== start server ========================
 async function startServer() {
     try {
         await mongoose.connect('mongodb://127.0.0.1:27017/chatWebDB')

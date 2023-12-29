@@ -26,8 +26,8 @@
                         </div>
                     </div>
                     <div class="mt-2">
-                        <input ref="passwordEl" v-model="password" tabindex="1" id="password" name="password" type="password"
-                            autocomplete="current-password"
+                        <input ref="passwordEl" v-model="password" tabindex="1" id="password" name="password"
+                            type="password" autocomplete="current-password"
                             class="px-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                     </div>
                 </div>
@@ -83,6 +83,7 @@ function onLogin() {
                 cookies.set('access_token', accessToken, '7d')
                 accountStore.fetchAccount(accessToken)
                 socketStore.connectToSocketServer()
+                socketStore.registerClientInfo(accountStore._id)
                 router.push({ name: 'home' })
             } else {
                 alert('Tài khoản hoặc mật khẩu không hợp lệ!')

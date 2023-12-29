@@ -11,8 +11,7 @@
             <div class="box-top p-2 flex items-center">
                 <!-- info -->
                 <div class="flex">
-                    <img :src="roomAvatar" alt="avatar"
-                        class="w-[40px] h-[40px] rounded-full inline-block">
+                    <img :src="roomAvatar" alt="avatar" class="w-[40px] h-[40px] rounded-full inline-block">
                     <div class="px-2">
                         <p>{{ room.roomName }}</p>
                         <p class="text-[10px] opacity-75">Hoạt động 4 giờ trước</p>
@@ -36,18 +35,20 @@
             <!-- messages -->
             <div class="box-middle border border-[--border] h-full overflow-y-auto p-2">
                 <div class="message flex mb-1" v-for="(item, index) in messages" :key="index">
-                    <template v-if="item.sender != author">
+                    <template v-if="item.sender != accountStore._id">
                         <div class="avatar-box w-[32px] h-[32px]">
-                            <img src="https://cdn.waifu.im/7478.jpg" class="w-full h-full rounded-full" alt="avatar"
-                                v-if="showAvatar(index)">
+                            <img :src="accountsStore.get(item.sender).avatar" class="w-full h-full rounded-full"
+                                alt="avatar" v-if="showAvatar(index)">
                         </div>
                         <p class="mx-2 max-w-[66%] bg-[#303030] px-3 py-1 rounded-xl">{{ item.text }}</p>
                     </template>
 
                     <template v-else>
-                        <p class="ml-auto max-w-[66%] bg-[#303030] px-3 py-1 rounded-xl">{{ item.text }}</p>
+                        <p class="ml-auto max-w-[66%] bg-[#0084ff] px-3 py-1 rounded-xl">{{ item.text }}</p>
                     </template>
                 </div>
+
+                <div ref="hiddenEl" class="h-0"></div>
             </div>
 
             <!-- input box -->
@@ -69,23 +70,33 @@ import axios from '@/axiosConfig'
 import { useAccountStore } from '@/stores/account'
 import { useAccountsStore } from '@/stores/accounts'
 import { useRoomsStore } from '@/stores/rooms'
+import { useSocketStore } from '@/stores/socket'
 import { Icon } from '@iconify/vue'
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onUpdated, ref, watch } from 'vue'
 
 const emits = defineEmits(['on-call', 'on-camera', 'on-info'])
 const roomsStore = useRoomsStore()
 const accountStore = useAccountStore()
 const accountsStore = useAccountsStore()
+const socketStore = useSocketStore()
+
 const props = defineProps({
     roomId: {
         required: true
     }
 })
+
+const hiddenEl = ref(null)
 const room = ref(null)
 const text = ref('')
 const roomAvatar = ref('')
 const messages = ref([])
 const roomId = computed(() => props.roomId)
+const socket = computed(() => socketStore.socket)
+
+onUpdated(() => {
+    hiddenEl.value.scrollIntoView({ behavior: 'smooth' })
+})
 
 watch(roomId, (newVal, oldVal) => {
     if (newVal != oldVal) {
@@ -94,6 +105,15 @@ watch(roomId, (newVal, oldVal) => {
 })
 
 initData()
+
+socketStore.resSendMessageActions.push(receiveMessageFromSocketServer)
+
+onBeforeUnmount(() => {
+    const index = socketStore.resSendMessageActions.indexOf(receiveMessageFromSocketServer)
+    if (index != -1) {
+        socketStore.resSendMessageActions.splice(index, 1)
+    }
+})
 
 
 
@@ -126,7 +146,7 @@ function updateRoomAvatar() {
     }
 
     const { avatar, members } = room.value
-    
+
     if (avatar) {
         roomAvatar.value = avatar
         return
@@ -137,11 +157,31 @@ function updateRoomAvatar() {
 }
 
 function sendMessage() {
-    console.log({ text: text.value })
+    // console.log({
+    //     sender: accountStore._id,
+    //     roomId: roomId,
+    //     text: text.value
+    // })
+
+    try {
+        socket.value.emit('req-send-message', {
+            sender: accountStore._id,
+            roomId: roomId.value,
+            text: text.value
+        })
+    } catch (error) {
+        console.log(error)
+    }
+
+    text.value = ''
 }
 
 function showAvatar(index) {
-    return index == 0 || messagesTest.value[index - 1].sender != messagesTest.value[index].sender
+    return index == 0 || messages.value[index - 1].sender != messages.value[index].sender
+}
+
+function receiveMessageFromSocketServer(data) {
+    messages.value.push(data)
 }
 
 </script>
