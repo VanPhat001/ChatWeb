@@ -2,7 +2,7 @@
     <div class="box-chat h-full w-full flex flex-col">
 
         <template v-if="roomId === null">
-            <p class="m-auto">
+            <p class="m-auto select-none">
                 no message, please select chat room before this action
             </p>
         </template>
@@ -40,11 +40,13 @@
                             <img :src="accountsStore.get(item.sender).avatar" class="w-full h-full rounded-full"
                                 alt="avatar" v-if="showAvatar(index)">
                         </div>
-                        <p class="mx-2 max-w-[66%] bg-[#303030] px-3 py-1 rounded-xl">{{ item.text }}</p>
+                        <p class="mx-2 max-w-[66%] bg-[#303030] px-3 py-1 rounded-xl"
+                            :title="`${new Date(item.createdAt).toLocaleString()}`">{{ item.text }}</p>
                     </template>
 
                     <template v-else>
-                        <p class="ml-auto max-w-[66%] bg-[#0084ff] px-3 py-1 rounded-xl">{{ item.text }}</p>
+                        <p class="ml-auto max-w-[66%] bg-[#0084ff] px-3 py-1 rounded-xl"
+                            :title="`${new Date(item.createdAt).toLocaleString()}`">{{ item.text }}</p>
                     </template>
                 </div>
 
@@ -95,7 +97,7 @@ const roomId = computed(() => props.roomId)
 const socket = computed(() => socketStore.socket)
 
 onUpdated(() => {
-    hiddenEl.value.scrollIntoView({ behavior: 'smooth' })
+    hiddenEl.value?.scrollIntoView({ behavior: 'smooth' })
 })
 
 watch(roomId, (newVal, oldVal) => {
