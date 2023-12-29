@@ -7,7 +7,7 @@
       <RouterView></RouterView>
       <!-- <NuxtWelcome /> -->
     </main>
-    <Loading v-if="showNavbar"></Loading>
+    <Loading :class="{'hidden': !showLoading}"></Loading>
   </div>
 </template>
 
@@ -27,10 +27,14 @@ const headerEl = ref(null)
 const cookies = inject('$cookies')
 const accountStore = useAccountStore()
 const socketStore = useSocketStore()
+const showLoading = ref(true)
 
 const accessToken = cookies.get('access_token')
+const showNavbar = computed(() => route.name != 'login' && route.name != 'error')
+
 
 if (!accessToken) {
+  removeLoadingElement()
   router.push({ name: 'login' })
 }
 
@@ -51,7 +55,7 @@ axios.post('/verify')
       }
 
       socketStore.registerClientInfo(accountStore._id)
-      document.getElementsByClassName('loading')[0]?.remove()
+      removeLoadingElement()
     }, 100)
   })
   .catch(err => {
@@ -59,7 +63,14 @@ axios.post('/verify')
     router.push({ name: 'login'})
   })
 
-const showNavbar = computed(() => route.name != 'login' && route.name != 'error')
+
+
+
+onMounted(() => {
+  updateMainContentHeight()
+  
+  window.addEventListener('resize', updateMainContentHeight)
+})
 
 
 function updateMainContentHeight() {
@@ -67,15 +78,9 @@ function updateMainContentHeight() {
   mainEl.value.style.height = h + 'px'
 }
 
-onMounted(() => {
-  updateMainContentHeight()
-
-  window.addEventListener('resize', updateMainContentHeight)
-})
-
-
-
-
+function removeLoadingElement() {
+  showLoading.value = false
+}
 
 
 </script>
