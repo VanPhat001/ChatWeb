@@ -81,10 +81,12 @@ function onLogin() {
 
             if (status == 'success') {
                 cookies.set('access_token', accessToken, '7d')
-                accountStore.fetchAccount(accessToken)
-                socketStore.connectToSocketServer()
-                socketStore.registerClientInfo(accountStore._id)
-                router.push({ name: 'home' })
+                // accountStore.fetchAccount(accessToken)
+                // socketStore.connectToSocketServer()
+                // socketStore.registerClientInfo(accountStore._id)
+                // router.push({ name: 'home' })
+
+                window.location.href = '/'
             } else {
                 alert('Tài khoản hoặc mật khẩu không hợp lệ!')
                 resetPassword()

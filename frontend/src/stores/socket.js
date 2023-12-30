@@ -6,6 +6,8 @@ import { ref } from "vue"
 export const useSocketStore = defineStore('socket', () => {
     const socket = ref(null)
     const resSendMessageActions = []
+    const clientOnlineActions = []
+    const clientOfflineActions = []
 
     function connectToSocketServer() {
         if (socket.value !== null) {
@@ -24,6 +26,13 @@ export const useSocketStore = defineStore('socket', () => {
             socket.value = null
         })
 
+        _socket.on('client-online', data => {
+            clientOnlineActions.forEach(func => func(data))
+        })
+
+        _socket.on('client-offline', data => {
+            clientOfflineActions.forEach(func => func(data))
+        })
 
         _socket.on('res-send-message', data => {
             resSendMessageActions.forEach(func => func(data))
@@ -40,8 +49,8 @@ export const useSocketStore = defineStore('socket', () => {
     }
 
     return {
-        socket, resSendMessageActions, 
+        socket, resSendMessageActions, clientOnlineActions, clientOfflineActions,
         connectToSocketServer,
-        registerClientInfo
+        registerClientInfo,
     }
 })

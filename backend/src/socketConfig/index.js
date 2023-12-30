@@ -6,26 +6,6 @@ const accountService = require("../services/accountService")
 const socket2account = new Map()
 const account2socket = new Map()
 
-
-async function createMessage(sender, roomId, text) {
-    try {
-        const messageDoc = await messageService.create({
-            sender,
-            roomId,
-            text
-        })
-
-        await roomService.updateOne(roomId, {
-            latestMessageId: messageDoc._id
-        })
-
-        return messageDoc.toObject()
-    } catch (error) {
-        console.log(error)
-        return null
-    }
-}
-
 module.exports = (io, socket) => {
     console.log('👤🤝🤝🤝 Have a client connect to server, id ' + socket.id)
 
@@ -34,11 +14,11 @@ module.exports = (io, socket) => {
         socket2account.set(socket.id, accountId)
         account2socket.set(accountId, socket.id)
 
-        accountService.updateOne(accountId, {
-            lastActive: null
-        })
-        // .then()
-        .catch(console.log)
+        accountService.updateOne({ _id: accountId }, { lastActive: null }, { allowNullFields: true })
+            .then(data => {
+                io.emit('client-online', { accountId })
+            })
+            .catch(console.log)
     })
 
     socket.on("disconnect", (reason) => {
@@ -50,8 +30,10 @@ module.exports = (io, socket) => {
         accountService.updateOne(accountId, {
             lastActive: Date.now()
         })
-        // .then()
-        .catch(console.log)
+            .then(() => {
+                io.emit('client-offline', { accountId })
+            })
+            .catch(console.log)
     })
 
 
@@ -87,4 +69,24 @@ module.exports = (io, socket) => {
         }
     })
 
+}
+
+
+async function createMessage(sender, roomId, text) {
+    try {
+        const messageDoc = await messageService.create({
+            sender,
+            roomId,
+            text
+        })
+
+        await roomService.updateOne(roomId, {
+            latestMessageId: messageDoc._id
+        })
+
+        return messageDoc.toObject()
+    } catch (error) {
+        console.log(error)
+        return null
+    }
 }

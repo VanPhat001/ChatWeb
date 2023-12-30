@@ -13,25 +13,30 @@
             </div>
             <!-- rooms -->
             <div class="flex-1 h-full overflow-y-auto px-2">
-                <div class="room relative p-2 rounded-lg flex hover:bg-gray-600 pr-8" v-for="(room, index) in rooms" :key="index"
-                    @click="selectRoom(index)">
-                    <div v-show="!room.seen" class="rounded-full w-3 h-3 bg-blue-600 absolute top-1/2 right-1 -translate-x-1/2 -translate-y-1/2"></div>
+                <template v-for="(roomId, index) in roomIdSet" :key="index">
+                    <div class="room relative p-2 rounded-lg flex hover:bg-gray-600 pr-8" :set="room = roomMap.get(roomId)"
+                        @click="selectRoom(roomId)">
+                        <div v-show="!room.seen"
+                            class="rounded-full w-3 h-3 bg-blue-600 absolute top-1/2 right-1 -translate-x-1/2 -translate-y-1/2">
+                        </div>
 
-                    <!-- <img :src="getRoomAvatar(index)" alt="avatar" class="w-[56px] h-[56px] rounded-full"> -->
-                    <Avatar :size="56" :src="getRoomAvatar(index)" :active="true"></Avatar>
-                    <div class="flex-1 pl-2 flex flex-col justify-center">
-                        <p>{{ room.roomName }}</p>
-                        <div class="text-[80%] flex">
-                            <p class="line-clamp-1">{{ room.latestMessage?.text }}</p>
-                            <p class="ml-auto whitespace-nowrap opacity-60">3 giờ</p>
+                        <!-- <img :src="getRoomAvatar(index)" alt="avatar" class="w-[56px] h-[56px] rounded-full"> -->
+                        <Avatar :size="56" :src="getRoomAvatar(roomId)" :active="isRoomOnline(roomId)"></Avatar>
+                        <div class="flex-1 pl-2 flex flex-col justify-center">
+                            <p>{{ room.roomName }}</p>
+                            <div class="text-[80%] flex opacity-60" :class="{ '!opacity-100': !room.seen }">
+                                <p class="line-clamp-1">{{ room.latestMessage?.text }}</p>
+                                <p class="ml-auto whitespace-nowrap">3 giờ</p>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </template>
             </div>
         </div>
 
         <!-- box chat -->
-        <BoxChat class="flex-1 border border-[--border]" @on-info="toggleInfoBox" :room-id="currentRoomId"></BoxChat>
+        <BoxChat class="flex-1 border border-[--border]" @click="onFocusBoxChat" @on-info="toggleInfoBox"
+            :room-id="currentRoomId"></BoxChat>
 
         <!-- user info -->
         <div ref="infoEl" class="sidebar w-[260px] border border-[--border] transition-all overflow-hidden close">right
@@ -58,22 +63,23 @@ import { Icon } from '@iconify/vue'
 import { computed, inject, onBeforeUnmount, ref } from 'vue'
 
 
-const infoEl = ref(null)
-const rooms = ref([])
-const accounts = ref([])
-const currentRoomIndex = ref(-1)
-const cookies = inject('$cookies')
-const accessToken = cookies.get('access_token')
 const accountStore = useAccountStore()
 const accountsStore = useAccountsStore()
 const roomsStore = useRoomsStore()
 const socketStore = useSocketStore()
+const infoEl = ref(null)
+const roomIdSet = ref(new Set())
+const accountIdSet = ref(new Set())
+// const currentRoomIndex = ref(-1)
+const currentRoomId = ref(null)
+const cookies = inject('$cookies')
+const accessToken = cookies.get('access_token')
 
-// currentRoom = null if user no select room (currentRoomIndex = -1) otherwise currentRoom = roomId
-const currentRoomId = computed(() => {
-    const roomIndex = currentRoomIndex.value
-    return roomIndex == -1 ? null : rooms.value[roomIndex]._id
-})
+const accountMap = computed(() => accountsStore.accountMap)
+const roomMap = computed(() => roomsStore.roomMap)
+
+
+
 
 // console.log({ tookenInRoom: cookies.get('access_token') })
 // console.log({ default: axiosConfig().defaults })
@@ -101,23 +107,26 @@ axiosConfig().get('/roomContainer')
             }
         })
 
-        const accountIdSet = new Set(allMembers)
+        const _accountIdSet = new Set(allMembers)
         let _accounts = []
-        accountIdSet.forEach(accountId => {
+        _accountIdSet.forEach(accountId => {
             if (accountsStore.contain(accountId)) {
-                accountIdSet.delete(accountId)
+                _accountIdSet.delete(accountId)
                 _accounts.push(accountsStore.get(accountId))
-
             }
         })
-        _accounts = _accounts.concat(await fetchAccounts([...accountIdSet]))
+        _accounts = _accounts.concat(await fetchAccounts([..._accountIdSet]))
 
         roomsStore.addMany(_rooms)
         accountsStore.addMany(_accounts)
-        accounts.value = _accounts
-        rooms.value = _rooms
+        accountIdSet.value = new Set(allMembers)
+        roomIdSet.value = _rooms.map(room => room._id)
+
+        // console.log({accountIdSet, roomIdSet})
 
         socketStore.resSendMessageActions.push(receiveMessageFromSocketServer)
+        socketStore.clientOnlineActions.push(clientOnline)
+        socketStore.clientOfflineActions.push(clientOffline)
     })
     .catch(err => console.log(err))
 
@@ -150,16 +159,26 @@ function toggleInfoBox() {
     }
 }
 
-function getAccount(id) {
-    for (let i = 0; i < accounts.value.length; i++) {
-        if (accounts.value[i]._id == id) {
-            return accounts.value[i]
-        }
-    }
+function getAccountById(accountId) {
+    return accountMap.value.get(accountId)
 }
 
-function getRoomAvatar(index) {
-    const room = rooms.value[index]
+function isRoomOnline(roomId) {
+    const members = roomMap.value.get(roomId).members
+
+    for (let i = 0; i < members.length; i++) {
+        const accountId = members[i]
+        const account = getAccountById(accountId)
+        if (account.lastActive === null && account._id != accountStore._id) {
+            return true
+        }
+    }
+
+    return false
+}
+
+function getRoomAvatar(roomId) {
+    const room = roomMap.value.get(roomId)
     if (room.avatar) {
         return room.avatar
     }
@@ -167,32 +186,52 @@ function getRoomAvatar(index) {
     const memIndex = room.members[0] == accountStore._id ? 1 : 0
     const accountId = room.members[memIndex]
 
-    return getAccount(accountId).avatar
+    return getAccountById(accountId).avatar
 }
 
-function selectRoom(index) {
-    console.log('select room ' + index)
-    currentRoomIndex.value = index
-    rooms.value[index].seen = true
+function selectRoom(roomId) {
+    currentRoomId.value = roomId
+    console.log('user select roomId ' + roomId)
+    userSeenMessageInRoom(roomId)
+}
+
+function onFocusBoxChat() {
+    if (currentRoomId.value) {
+        userSeenMessageInRoom(currentRoomId.value)
+    }
+}
+
+function userSeenMessageInRoom(roomId) {
+    const room = roomMap.value.get(roomId)
+    console.log({roomId, roomMap})
+    room.seen = true
+    roomMap.value.set(roomId, room)
+}
+
+function clientOnline({ accountId }) {
+    accountsStore.setAccountOnline(accountId)
+}
+
+function clientOffline({ accountId }) {
+    accountsStore.setAccountOffline(accountId)
 }
 
 function receiveMessageFromSocketServer(message) {
     const { sender, roomId, text, _id } = message
     // console.log({ sender, roomId, text })
 
+    let seen = false
     if (sender != accountStore._id) {
         playReceiveMessageSound()
+    } else {
+        seen = true
     }
 
     // update room.latestMessageId & room.latestMessage
-    for (let i = 0; i < rooms.value.length; i++) {
-        if (rooms.value[i]._id == roomId) {
-            rooms.value[i].latestMessageId = _id
-            rooms.value[i].latestMessage = message
-            rooms.value[i].seen = false
-
-            break
-        }
-    }
+    const room = roomMap.value.get(roomId)
+    room.latestMessageId = _id
+    room.latestMessage = message
+    room.seen = seen
+    roomMap.value.set(roomId, room)
 }
 </script>

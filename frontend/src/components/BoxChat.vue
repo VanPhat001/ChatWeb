@@ -12,7 +12,7 @@
                 <!-- info -->
                 <div class="flex">
                     <!-- <img :src="roomAvatar" alt="avatar" class="w-[40px] h-[40px] rounded-full inline-block"> -->
-                    <Avatar :size="40" :src="roomAvatar" :active="true" :bottom-percent="-4" :right-percent="-4"></Avatar>
+                    <Avatar :size="40" :src="roomAvatar" :active="isRoomActive" :bottom-percent="-4" :right-percent="-4"></Avatar>
 
                     <div class="px-2">
                         <p>{{ room.roomName }}</p>
@@ -39,8 +39,11 @@
                 <div class="message flex mb-1" v-for="(item, index) in messages" :key="index">
                     <template v-if="item.sender != accountStore._id">
                         <div class="avatar-box w-[32px] h-[32px]">
-                            <img :src="accountsStore.get(item.sender).avatar" class="w-full h-full rounded-full"
-                                alt="avatar" v-if="showAvatar(index)">
+                            <!-- <img :src="accountsStore.get(item.sender).avatar" class="w-full h-full rounded-full"
+                                alt="avatar" v-if="showAvatar(index)"> -->
+
+                            <Avatar :active="false" :src="accountsStore.get(item.sender).avatar" :size="32"
+                                v-if="showAvatar(index)"></Avatar>
                         </div>
                         <p class="mx-2 max-w-[66%] bg-[#303030] px-3 py-1 rounded-xl"
                             :title="`${new Date(item.createdAt).toLocaleString()}`">{{ item.text }}</p>
@@ -76,7 +79,7 @@ import { useAccountsStore } from '@/stores/accounts'
 import { useRoomsStore } from '@/stores/rooms'
 import { useSocketStore } from '@/stores/socket'
 import { Icon } from '@iconify/vue'
-import { computed, onBeforeUnmount, onMounted, onUpdated, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, onUpdated, ref, registerRuntimeCompiler, watch } from 'vue'
 import { playReceiveMessageSound, playSendMessageSound } from '@/sounds'
 import Avatar from './Avatar.vue'
 
@@ -100,6 +103,17 @@ const roomAvatar = ref('')
 const messages = ref([])
 const roomId = computed(() => props.roomId)
 const socket = computed(() => socketStore.socket)
+
+const isRoomActive =computed(() => {
+    const members = room.value.members
+    for (let i = 0; i < members.length; i++) {
+        const accountId = members[i]
+        if (accountId != accountStore._id && accountsStore.accountMap.get(accountId).lastActive === null) {
+            return true
+        }
+    }
+    return false
+})
 
 initData()
 socketStore.resSendMessageActions.push(receiveMessageFromSocketServer)
@@ -155,12 +169,6 @@ function sendMessage() {
         return
     }
 
-    // console.log({
-    //     sender: accountStore._id,
-    //     roomId: roomId,
-    //     text: text.value
-    // })
-
     try {
         socket.value.emit('req-send-message', {
             sender: accountStore._id,
@@ -189,16 +197,6 @@ function receiveMessageFromSocketServer(msg) {
     // console.log({msg})
     messages.value.push(msg)
 }
-
-// function playSendMessageSound(){
-//     const audio = new Audio('/message-sound.mp3')
-//     audio.play()
-// }
-
-// function playReceiveMessageSound() {
-//     const audio = new Audio('/message_received.mp3')
-//     audio.play()
-// }
 
 function showAvatar(index) {
     return index == 0 || messages.value[index - 1].sender != messages.value[index].sender

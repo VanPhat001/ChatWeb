@@ -15,9 +15,11 @@ class AccountService {
         return this.Account.findOne(payload)
     }
 
-    updateOne(id, payload) {
-        removeNullProps(payload)
-        return this.Account.updateOne({ _id: id }, { ...payload })
+    updateOne(id, payload, options = { allowNullFields: false }) {
+        if (!options.allowNullFields) {
+            removeNullProps(payload)
+        }
+        return this.Account.updateOne({ _id: id }, { $set: payload })
     }
 
     delete(payload) {

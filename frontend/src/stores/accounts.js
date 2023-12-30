@@ -2,11 +2,11 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 
 export const useAccountsStore = defineStore('accounts', () => {
-    const accountsMap = ref(new Map())
+    const accountMap = ref(new Map())
 
     function addOne(account) {
-        if (!accountsMap.value.has(account._id)) {
-            accountsMap.value.set(account._id, account)
+        if (!accountMap.value.has(account._id)) {
+            accountMap.value.set(account._id, account)
         }
     }
 
@@ -17,15 +17,35 @@ export const useAccountsStore = defineStore('accounts', () => {
     }
 
     function get(accountId) {
-        return accountsMap.value.get(accountId)
+        return accountMap.value.get(accountId)
     }
 
     function contain(accountId) {
-        return accountsMap.value.has(accountId)
+        return accountMap.value.has(accountId)
     } 
 
+    function setAccountOnline(accountId) {
+        const account = get(accountId)
+        if (!account) {
+            return
+        }
+
+        account.lastActive = null
+        accountMap.value.set(accountId, account)
+    }
+
+    function setAccountOffline(accountId) {
+        const account = get(accountId)
+        if (!account) {
+            return
+        }
+
+        account.lastActive = new Date().toLocaleString()
+        accountMap.value.set(accountId, account)
+    }
+
     return {
-        accountsMap, 
-        addOne, addMany, get, contain
+        accountMap, 
+        addOne, addMany, get, contain, setAccountOnline, setAccountOffline
     }
 })

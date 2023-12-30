@@ -2,11 +2,11 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 
 export const useRoomsStore = defineStore('rooms', () => {
-    const roomsMap = ref(new Map())
+    const roomMap = ref(new Map())
 
     function addOne(room) {
-        if (!roomsMap.value.has(room._id)) {
-            roomsMap.value.set(room._id, room)
+        if (!roomMap.value.has(room._id)) {
+            roomMap.value.set(room._id, room)
         }
     }
 
@@ -17,15 +17,15 @@ export const useRoomsStore = defineStore('rooms', () => {
     }
 
     function get(roomId) {
-        return roomsMap.value.get(roomId)
+        return roomMap.value.get(roomId)
     }
 
     function contain(roomId) {
-        return roomsMap.value.has(roomId)
+        return roomMap.value.has(roomId)
     } 
 
     return {
-        roomsMap, 
+        roomMap, 
         addOne, addMany, get, contain
     }
 })
