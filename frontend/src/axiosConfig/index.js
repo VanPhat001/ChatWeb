@@ -1,5 +1,4 @@
 import axios from "axios"
-import VueCookies from 'vue-cookies'
 
 function getCookie(name) {
     function escape(s) { return s.replace(/([.*+?\^$(){}|\[\]\/\\])/g, '\\$1'); }
@@ -7,14 +6,17 @@ function getCookie(name) {
     return match ? match[1] : null;
 }
 
-const accessToken = getCookie('access_token')
-// console.log({ accessToken })
-const AuthorizationString = accessToken ? `Bearer ${accessToken}` : null
+function axiosConfig() {
+    const accessToken = getCookie('access_token')
+    const AuthorizationString = accessToken ? `Bearer ${accessToken}` : null
 
-export default axios.create({
-    baseURL: 'http://localhost:4193/api',
-    headers: {
-        "Content-Type": 'application/json',
-        Authorization: AuthorizationString
-    }
-})
+    return axios.create({
+        baseURL: 'http://localhost:4193/api',
+        headers: {
+            "Content-Type": 'application/json',
+            Authorization: AuthorizationString
+        }
+    })
+}
+
+export default axiosConfig

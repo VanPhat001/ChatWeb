@@ -8,7 +8,7 @@ const router = require('express').Router()
 router.route('/')
     // get all rooms
     .get(authenToken, async (req, res, next) => {
-        const accountId  = req.data._id
+        const accountId = req.data._id
 
         if (!accountId) {
             return res.status(401).send({ status: 'error' })

@@ -51,7 +51,7 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-import axios from '@/axiosConfig'
+import axiosConfig from '@/axiosConfig'
 import { inject, ref } from 'vue'
 import { useAccountStore } from '@/stores/account';
 import { useSocketStore } from '@/stores/socket';
@@ -71,7 +71,7 @@ function resetPassword() {
 }
 
 function onLogin() {
-    axios.post('/login', {
+    axiosConfig().post('/login', {
         username: username.value,
         password: password.value
     })

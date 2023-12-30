@@ -1,5 +1,5 @@
 import { defineStore } from "pinia"
-import axios from "@/axiosConfig"
+import axiosConfig from "@/axiosConfig"
 import { ref } from "vue"
 
 
@@ -20,7 +20,11 @@ export const useAccountStore = defineStore('account', () => {
 
     async function fetchAccount(accessToken) {
         try {
-            const result = await axios.get('/account')
+            const result = await axiosConfig().get('/account', {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            })
             const { account } = result.data
 
             _id.value = account._id

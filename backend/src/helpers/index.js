@@ -20,7 +20,6 @@ module.exports = {
         }
 
         const accessToken = auth.split(' ')[1]
-
         if (!accessToken) {
             return res.status(401).send({ status: 'error' })
         }

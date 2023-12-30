@@ -26,6 +26,11 @@ io.on("connection", socket => socketConfig(io, socket))
 
 
 // ======================== nodejs config ========================
+app.use((req, res, next) => {
+    process.stdout.write(`[${new Date().toLocaleString()}] `)
+    next()
+})
+
 app.use('/api', require('./src/router'))
 app.use('/admin', require('./src/router/adminRouter'))
 

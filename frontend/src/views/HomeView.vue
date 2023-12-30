@@ -3,7 +3,7 @@
       molestias saepe ducimus, optio asperiores odit fuga aspernatur molestiae et animi, sapiente suscipit neque
       temporibus.</h1>
 
-      <Modal></Modal>
+      <!-- <Modal></Modal> -->
 </template>
 
 <script setup>

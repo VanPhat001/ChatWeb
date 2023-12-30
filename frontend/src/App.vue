@@ -16,7 +16,7 @@ import { computed, inject, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import Navbar from './components/Navbar.vue'
 import router from './router'
-import axios from '@/axiosConfig'
+import axiosConfig from '@/axiosConfig'
 import { useAccountStore } from '@/stores/account'
 import { useSocketStore } from './stores/socket'
 import Loading from '@/components/Loading.vue'
@@ -38,7 +38,7 @@ if (!accessToken) {
   router.push({ name: 'login' })
 }
 
-axios.post('/verify')
+axiosConfig().post('/verify')
   .then(result => {
     const { status } = result.data
 

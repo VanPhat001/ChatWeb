@@ -45,7 +45,7 @@
 </style>
 
 <script setup>
-import axios from '@/axiosConfig';
+import axiosConfig from '@/axiosConfig';
 import BoxChat from '@/components/BoxChat.vue'
 import { useAccountStore } from '@/stores/account';
 import { useAccountsStore } from '@/stores/accounts'
@@ -69,7 +69,9 @@ const currentRoomId = computed(() => {
     return roomIndex == -1 ? null : rooms.value[roomIndex]._id
 })
 
-axios.get('/roomContainer')
+console.log({ tookenInRoom: cookies.get('access_token') })
+console.log({ default: axiosConfig().defaults })
+axiosConfig().get('/roomContainer')
     .then(async result => {
         const _rooms = result.data.rooms
 
@@ -99,7 +101,7 @@ axios.get('/roomContainer')
 
 
 async function fetchAccounts(accountIdArray) {
-    const result = await axios.post('/account/list', {
+    const result = await axiosConfig().post('/account/list', {
         accountIdArray
     })
     return result.data.accounts

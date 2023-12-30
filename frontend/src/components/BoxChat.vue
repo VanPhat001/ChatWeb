@@ -68,13 +68,13 @@
 </template>
 
 <script setup>
-import axios from '@/axiosConfig'
+import axiosConfig from '@/axiosConfig'
 import { useAccountStore } from '@/stores/account'
 import { useAccountsStore } from '@/stores/accounts'
 import { useRoomsStore } from '@/stores/rooms'
 import { useSocketStore } from '@/stores/socket'
 import { Icon } from '@iconify/vue'
-import { computed, onBeforeUnmount, onUpdated, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, onUpdated, ref, watch } from 'vue'
 
 const emits = defineEmits(['on-call', 'on-camera', 'on-info'])
 const roomsStore = useRoomsStore()
@@ -96,6 +96,10 @@ const messages = ref([])
 const roomId = computed(() => props.roomId)
 const socket = computed(() => socketStore.socket)
 
+initData()
+socketStore.resSendMessageActions.push(receiveMessageFromSocketServer)
+
+
 onUpdated(() => {
     hiddenEl.value?.scrollIntoView({ behavior: 'smooth' })
 })
@@ -106,10 +110,6 @@ watch(roomId, (newVal, oldVal) => {
     }
 })
 
-initData()
-
-socketStore.resSendMessageActions.push(receiveMessageFromSocketServer)
-
 onBeforeUnmount(() => {
     const index = socketStore.resSendMessageActions.indexOf(receiveMessageFromSocketServer)
     if (index != -1) {
@@ -117,30 +117,17 @@ onBeforeUnmount(() => {
     }
 })
 
-
-
-
-
 async function initData(limit = 20) {
+    if (roomId.value === null) {
+        return
+    }
+
     room.value = roomsStore.get(roomId.value)
     updateRoomAvatar()
 
-    const result = await axios.get(`/room/${roomId.value}`)
+    const result = await axiosConfig().get(`/room/${roomId.value}`)
     messages.value = result.data.messages
 }
-
-
-// const author = 1
-// const messagesTest = ref([
-//     {
-//         sender: 1,
-//         text: 'hihi'
-//     },
-//     {
-//         sender: 2,
-//         text: 'hihi'
-//     }
-// ])
 
 function updateRoomAvatar() {
     if (!room.value) {
@@ -171,6 +158,8 @@ function sendMessage() {
             roomId: roomId.value,
             text: text.value
         })
+
+        playSendMessageSound()
     } catch (error) {
         console.log(error)
     }
@@ -178,12 +167,26 @@ function sendMessage() {
     text.value = ''
 }
 
+function receiveMessageFromSocketServer(data) {
+    if (data.sender != accountStore._id) {
+        playReceiveMessageSound()
+    }
+    messages.value.push(data)
+}
+
+function playSendMessageSound(){
+    const audio = new Audio('/message-sound.mp3')
+    audio.play()
+}
+
+function playReceiveMessageSound() {
+    const audio = new Audio('/message_received.mp3')
+    audio.play()
+}
+
 function showAvatar(index) {
     return index == 0 || messages.value[index - 1].sender != messages.value[index].sender
 }
 
-function receiveMessageFromSocketServer(data) {
-    messages.value.push(data)
-}
 
 </script>
