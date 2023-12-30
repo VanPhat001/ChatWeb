@@ -27,7 +27,8 @@ io.on("connection", socket => socketConfig(io, socket))
 
 // ======================== nodejs config ========================
 app.use((req, res, next) => {
-    process.stdout.write(`[${new Date().toLocaleString()}] `)
+    // process.stdout.write(`[${new Date().toLocaleString()}] `)
+    console.log(`[${new Date().toLocaleString()}]`)
     next()
 })
 

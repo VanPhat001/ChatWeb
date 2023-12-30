@@ -10,6 +10,10 @@ const schema = new Schema({
         type: String,
         required: true
     },
+    lastActive: {
+        type: Date,
+        default: Date.now()
+    },
     name: {
         type: String,
         required: true

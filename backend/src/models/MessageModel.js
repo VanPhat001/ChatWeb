@@ -6,7 +6,7 @@ const schema = new Schema({
         required: true,
     },
     roomId: {
-        type: [String],
+        type: String,
         require: true
     },
     text: {

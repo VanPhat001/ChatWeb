@@ -1,5 +1,6 @@
 const roomService = require("../services/roomService")
 const messageService = require('../services/messageService')
+const accountService = require("../services/accountService")
 
 
 const socket2account = new Map()
@@ -26,26 +27,38 @@ async function createMessage(sender, roomId, text) {
 }
 
 module.exports = (io, socket) => {
-    console.log('Have a client connect to server, id ' + socket.id)
+    console.log('👤🤝🤝🤝 Have a client connect to server, id ' + socket.id)
 
     socket.on('register-client-info', ({ accountId }) => {
-        console.log(`>> Client register, socketId ${socket.id}, accountId ${accountId}`)
+        console.log(`👤 ▶️▶️ 🏠 Client register, socketId ${socket.id}, accountId ${accountId}`)
         socket2account.set(socket.id, accountId)
         account2socket.set(accountId, socket.id)
+
+        accountService.updateOne(accountId, {
+            lastActive: null
+        })
+        // .then()
+        .catch(console.log)
     })
 
     socket.on("disconnect", (reason) => {
-        console.log('Socket disconnected, id = ' + socket.id)
+        console.log('◀️◀️ 👤🏠 Socket disconnected, id = ' + socket.id)
         const accountId = socket2account.get(socket.id)
         socket2account.delete(socket.id)
         account2socket.delete(accountId)
+
+        accountService.updateOne(accountId, {
+            lastActive: Date.now()
+        })
+        // .then()
+        .catch(console.log)
     })
 
 
 
     socket.on('req-send-message', async ({ sender, roomId, text }) => {
         try {
-            console.log('incomming message: ' + text)
+            console.log('📩📩 incomming message: ' + text)
 
             const tasks = [
                 roomService.getOne({ _id: roomId }),
@@ -53,6 +66,7 @@ module.exports = (io, socket) => {
             ]
 
             const [roomDoc, message] = await Promise.all(tasks)
+            // console.log({message})
             if (message === null) {
                 return
             }

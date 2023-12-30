@@ -11,7 +11,9 @@
             <div class="box-top p-2 flex items-center">
                 <!-- info -->
                 <div class="flex">
-                    <img :src="roomAvatar" alt="avatar" class="w-[40px] h-[40px] rounded-full inline-block">
+                    <!-- <img :src="roomAvatar" alt="avatar" class="w-[40px] h-[40px] rounded-full inline-block"> -->
+                    <Avatar :size="40" :src="roomAvatar" :active="true" :bottom-percent="-4" :right-percent="-4"></Avatar>
+
                     <div class="px-2">
                         <p>{{ room.roomName }}</p>
                         <p class="text-[10px] opacity-75">Hoạt động 4 giờ trước</p>
@@ -75,6 +77,9 @@ import { useRoomsStore } from '@/stores/rooms'
 import { useSocketStore } from '@/stores/socket'
 import { Icon } from '@iconify/vue'
 import { computed, onBeforeUnmount, onMounted, onUpdated, ref, watch } from 'vue'
+import { playReceiveMessageSound, playSendMessageSound } from '@/sounds'
+import Avatar from './Avatar.vue'
+
 
 const emits = defineEmits(['on-call', 'on-camera', 'on-info'])
 const roomsStore = useRoomsStore()
@@ -146,6 +151,10 @@ function updateRoomAvatar() {
 }
 
 function sendMessage() {
+    if (!text.value.trim()) {
+        return
+    }
+
     // console.log({
     //     sender: accountStore._id,
     //     roomId: roomId,
@@ -167,22 +176,29 @@ function sendMessage() {
     text.value = ''
 }
 
-function receiveMessageFromSocketServer(data) {
-    if (data.sender != accountStore._id) {
-        playReceiveMessageSound()
+function receiveMessageFromSocketServer(msg) {
+    if (msg.roomId != roomId.value) {
+        return
     }
-    messages.value.push(data)
+
+    // already solved in ChatView.vue file
+    // if (msg.sender != accountStore._id) {
+    //     playReceiveMessageSound()
+    // }
+
+    // console.log({msg})
+    messages.value.push(msg)
 }
 
-function playSendMessageSound(){
-    const audio = new Audio('/message-sound.mp3')
-    audio.play()
-}
+// function playSendMessageSound(){
+//     const audio = new Audio('/message-sound.mp3')
+//     audio.play()
+// }
 
-function playReceiveMessageSound() {
-    const audio = new Audio('/message_received.mp3')
-    audio.play()
-}
+// function playReceiveMessageSound() {
+//     const audio = new Audio('/message_received.mp3')
+//     audio.play()
+// }
 
 function showAvatar(index) {
     return index == 0 || messages.value[index - 1].sender != messages.value[index].sender

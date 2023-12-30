@@ -13,15 +13,16 @@
             </div>
             <!-- rooms -->
             <div class="flex-1 h-full overflow-y-auto px-2">
-                <div class="room p-2 rounded-lg flex hover:bg-gray-600" v-for="(room, index) in rooms" :key="index"
+                <div class="room relative p-2 rounded-lg flex hover:bg-gray-600 pr-8" v-for="(room, index) in rooms" :key="index"
                     @click="selectRoom(index)">
-                    <img :src="getRoomAvatar(index)" alt="avatar" class="w-[56px] h-[56px] rounded-full">
+                    <div v-show="!room.seen" class="rounded-full w-3 h-3 bg-blue-600 absolute top-1/2 right-1 -translate-x-1/2 -translate-y-1/2"></div>
+
+                    <!-- <img :src="getRoomAvatar(index)" alt="avatar" class="w-[56px] h-[56px] rounded-full"> -->
+                    <Avatar :size="56" :src="getRoomAvatar(index)" :active="true"></Avatar>
                     <div class="flex-1 pl-2 flex flex-col justify-center">
                         <p>{{ room.roomName }}</p>
                         <div class="text-[80%] flex">
-                            <p class="line-clamp-1">Lorem ipsum dolor sit amet consectetur adipisicing elit. Expedita soluta
-                                illo architecto id facere obcaecati ratione, blanditiis ipsa nesciunt repudiandae vel
-                                voluptatum, placeat earum alias et in consequatur quibusdam iste!</p>
+                            <p class="line-clamp-1">{{ room.latestMessage?.text }}</p>
                             <p class="ml-auto whitespace-nowrap opacity-60">3 giờ</p>
                         </div>
                     </div>
@@ -45,13 +46,17 @@
 </style>
 
 <script setup>
-import axiosConfig from '@/axiosConfig';
+import axiosConfig from '@/axiosConfig'
+import Avatar from '@/components/Avatar.vue'
 import BoxChat from '@/components/BoxChat.vue'
-import { useAccountStore } from '@/stores/account';
+import { playReceiveMessageSound } from '@/sounds'
+import { useAccountStore } from '@/stores/account'
 import { useAccountsStore } from '@/stores/accounts'
-import { useRoomsStore } from '@/stores/rooms';
+import { useRoomsStore } from '@/stores/rooms'
+import { useSocketStore } from '@/stores/socket'
 import { Icon } from '@iconify/vue'
-import { computed, inject, ref } from 'vue'
+import { computed, inject, onBeforeUnmount, ref } from 'vue'
+
 
 const infoEl = ref(null)
 const rooms = ref([])
@@ -62,6 +67,7 @@ const accessToken = cookies.get('access_token')
 const accountStore = useAccountStore()
 const accountsStore = useAccountsStore()
 const roomsStore = useRoomsStore()
+const socketStore = useSocketStore()
 
 // currentRoom = null if user no select room (currentRoomIndex = -1) otherwise currentRoom = roomId
 const currentRoomId = computed(() => {
@@ -69,8 +75,8 @@ const currentRoomId = computed(() => {
     return roomIndex == -1 ? null : rooms.value[roomIndex]._id
 })
 
-console.log({ tookenInRoom: cookies.get('access_token') })
-console.log({ default: axiosConfig().defaults })
+// console.log({ tookenInRoom: cookies.get('access_token') })
+// console.log({ default: axiosConfig().defaults })
 axiosConfig().get('/roomContainer')
     .then(async result => {
         const _rooms = result.data.rooms
@@ -78,6 +84,21 @@ axiosConfig().get('/roomContainer')
         let allMembers = []
         _rooms.forEach(room => {
             allMembers = allMembers.concat(room.members)
+            room.seen = true
+        })
+
+        const latestMessages = await fetchLatestMessages(_rooms.map(room => room.latestMessageId))
+        latestMessages.forEach(msg => {
+            if (msg === null) {
+                return
+            }
+
+            for (let i = 0; i < _rooms.length; i++) {
+                if (_rooms[i]._id == msg.roomId) {
+                    _rooms[i].latestMessage = msg
+                    break
+                }
+            }
         })
 
         const accountIdSet = new Set(allMembers)
@@ -93,12 +114,26 @@ axiosConfig().get('/roomContainer')
 
         roomsStore.addMany(_rooms)
         accountsStore.addMany(_accounts)
-
         accounts.value = _accounts
         rooms.value = _rooms
+
+        socketStore.resSendMessageActions.push(receiveMessageFromSocketServer)
     })
     .catch(err => console.log(err))
 
+onBeforeUnmount(() => {
+    const index = socketStore.resSendMessageActions.indexOf(receiveMessageFromSocketServer)
+    if (index != -1) {
+        socketStore.resSendMessageActions.splice(index, 1)
+    }
+})
+
+async function fetchLatestMessages(latestMessageIdArray) {
+    const result = await axiosConfig().post('/message/latest', {
+        latestMessageIdArray
+    })
+    return result.data.latestMessages
+}
 
 async function fetchAccounts(accountIdArray) {
     const result = await axiosConfig().post('/account/list', {
@@ -106,7 +141,6 @@ async function fetchAccounts(accountIdArray) {
     })
     return result.data.accounts
 }
-
 
 function toggleInfoBox() {
     if (infoEl.value.classList.contains('close')) {
@@ -139,5 +173,26 @@ function getRoomAvatar(index) {
 function selectRoom(index) {
     console.log('select room ' + index)
     currentRoomIndex.value = index
+    rooms.value[index].seen = true
+}
+
+function receiveMessageFromSocketServer(message) {
+    const { sender, roomId, text, _id } = message
+    // console.log({ sender, roomId, text })
+
+    if (sender != accountStore._id) {
+        playReceiveMessageSound()
+    }
+
+    // update room.latestMessageId & room.latestMessage
+    for (let i = 0; i < rooms.value.length; i++) {
+        if (rooms.value[i]._id == roomId) {
+            rooms.value[i].latestMessageId = _id
+            rooms.value[i].latestMessage = message
+            rooms.value[i].seen = false
+
+            break
+        }
+    }
 }
 </script>
