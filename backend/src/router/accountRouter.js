@@ -1,6 +1,6 @@
 const router = require('express').Router()
 
-const { removePasswordProp, authenToken } = require('../helpers')
+const { removePasswordProp, authenToken, convertDocsToArrayObject } = require('../helpers')
 const accountService = require('../services/accountService')
 const friendContainerService = require('../services/friendContainerService')
 const postContainerService = require('../services/postContainerService')
@@ -55,10 +55,27 @@ router.post('/list', async (req, res, next) => {
     try {
         const tasks = []
         accountIdArray.forEach(accountId => {
-            tasks.push(accountService.getOne({ _id: accountId }))
+            tasks.push(accountService.Account.findOne({ _id: accountId }, { password: 0 }))
         })
 
         const accountDocs = await Promise.all(tasks)
+
+        res.send({ status: 'success', accounts: accountDocs })
+    } catch (error) {
+        next(error)
+    }
+})
+
+router.get('/name/regex/:str', async (req, res, next) => {
+    const { str: searchString } = req.params
+
+    try {
+        const regexString = searchString.replace(' ', '|')
+        const reg = new RegExp('.*' + regexString + '.*', 'i')
+
+        const accountDocs = await accountService.Account.find({
+            name: reg
+        }, { password: 0 })
 
         res.send({ status: 'success', accounts: accountDocs })
     } catch (error) {

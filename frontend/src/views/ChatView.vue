@@ -3,16 +3,24 @@
         <!-- room chat list -->
         <div class="sidebar w-[320px] border border-[--border] h-full flex flex-col">
             <!-- search box -->
-            <div class="px-2 py-3">
-                <div class="flex bg-[#3a3b3c] rounded-xl px-2 py-1">
-                    <button>
+            <div class="px-2 py-3 flex">
+                <button class="px-2 hover:bg-gray-700 mr-1 rounded-lg" @click="showResultBox = false" v-show="showResultBox">
+                    <Icon icon="lets-icons:back" height="24"></Icon>
+                </button>
+                <div class="flex flex-1 bg-[#3a3b3c] rounded-xl px-2 py-1">
+                    <button disabled>
                         <Icon icon="ic:round-search" height="24"></Icon>
                     </button>
-                    <input type="text" class="flex-1 bg-transparent outline-none px-1" placeholder="Tìm kiếm">
+                    <input type="text" v-model="searchText" class="flex-1 bg-transparent outline-none px-1"
+                        placeholder="Tìm kiếm">
                 </div>
             </div>
+
+            <!-- result box -->
+            <AccountList v-show="showResultBox" :account-id-list="searchResultArray" @on-select-account-id="createRoomIfNotExist"></AccountList>
+
             <!-- rooms -->
-            <div class="flex-1 h-full overflow-y-auto px-2">
+            <div v-show="!showResultBox" class="flex-1 h-full overflow-y-auto px-2">
                 <template v-for="(roomId, index) in roomIdSet" :key="index">
                     <div class="room relative p-2 rounded-lg flex hover:bg-gray-600 pr-8" :set="room = roomMap.get(roomId)"
                         @click="selectRoom(roomId)">
@@ -53,6 +61,7 @@
 <script setup>
 import axiosConfig from '@/axiosConfig'
 import Avatar from '@/components/Avatar.vue'
+import AccountList from '@/components/AccountList.vue'
 import BoxChat from '@/components/BoxChat.vue'
 import { playReceiveMessageSound } from '@/sounds'
 import { useAccountStore } from '@/stores/account'
@@ -60,7 +69,8 @@ import { useAccountsStore } from '@/stores/accounts'
 import { useRoomsStore } from '@/stores/rooms'
 import { useSocketStore } from '@/stores/socket'
 import { Icon } from '@iconify/vue'
-import { computed, inject, onBeforeUnmount, ref } from 'vue'
+import { computed, inject, onBeforeUnmount, ref, watch } from 'vue'
+import Debounce from '../helpers/Debounce'
 
 
 const accountStore = useAccountStore()
@@ -70,15 +80,43 @@ const socketStore = useSocketStore()
 const infoEl = ref(null)
 const roomIdSet = ref(new Set())
 const accountIdSet = ref(new Set())
-// const currentRoomIndex = ref(-1)
+const searchResultArray = ref([])
+const showResultBox = ref(false)
 const currentRoomId = ref(null)
+const searchText = ref('')
 const cookies = inject('$cookies')
 const accessToken = cookies.get('access_token')
 
 const accountMap = computed(() => accountsStore.accountMap)
 const roomMap = computed(() => roomsStore.roomMap)
 
+const debounce = new Debounce(() => {
+    findAccountsByRegex()
+}, 300)
 
+watch(() => searchText.value, (newVal, oldVal) => {
+    debounce.reStart()
+})
+
+function findAccountsByRegex() {
+    if (searchText.value == '') {
+        return
+    }
+
+    console.log('>> find account by regex')
+    axiosConfig().get(`/account/name/regex/${searchText.value}`)
+        .then(result => {
+            const { accounts } = result.data
+            accountsStore.addMany(accounts)
+            showResultBox.value = true
+            searchResultArray.value = accounts.map(account => account._id)
+        })
+        .catch(console.log)
+}
+
+function createRoomIfNotExist({ accountId }) {
+    console.log('click accountId ' + accountId)
+}
 
 
 // console.log({ tookenInRoom: cookies.get('access_token') })
@@ -131,7 +169,17 @@ axiosConfig().get('/roomContainer')
     .catch(err => console.log(err))
 
 onBeforeUnmount(() => {
-    const index = socketStore.resSendMessageActions.indexOf(receiveMessageFromSocketServer)
+    let index = socketStore.resSendMessageActions.indexOf(receiveMessageFromSocketServer)
+    if (index != -1) {
+        socketStore.resSendMessageActions.splice(index, 1)
+    }
+
+    index = socketStore.resSendMessageActions.indexOf(clientOnline)
+    if (index != -1) {
+        socketStore.resSendMessageActions.splice(index, 1)
+    }
+
+    index = socketStore.resSendMessageActions.indexOf(clientOffline)
     if (index != -1) {
         socketStore.resSendMessageActions.splice(index, 1)
     }
@@ -203,7 +251,7 @@ function onFocusBoxChat() {
 
 function userSeenMessageInRoom(roomId) {
     const room = roomMap.value.get(roomId)
-    console.log({roomId, roomMap})
+    console.log({ roomId, roomMap })
     room.seen = true
     roomMap.value.set(roomId, room)
 }

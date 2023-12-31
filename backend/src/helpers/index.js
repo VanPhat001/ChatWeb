@@ -32,5 +32,9 @@ module.exports = {
                 next()
             }
         })
+    },
+
+    convertDocsToArrayObject(docs) {
+        return docs.map(doc => doc.toObject())
     }
 }
