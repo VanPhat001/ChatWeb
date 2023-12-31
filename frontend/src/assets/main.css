@@ -2,6 +2,7 @@ html {
     /* bg-[#18191a] text-[#e4e6ea] */
     background-color: var(--background);
     color: var(--text);
+    font-family: 'palatino';
 }
 
 :root {

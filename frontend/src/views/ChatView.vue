@@ -49,7 +49,8 @@
             :room-id="currentRoomId"></BoxChat>
 
         <!-- user info -->
-        <div ref="infoEl" class="sidebar w-[260px] border border-[--border] transition-all overflow-hidden close">right
+        <div ref="infoEl" class="sidebar w-[260px] border border-[--border] transition-all overflow-y-auto close" :set="roomInfo = getRoomInfo()">
+            <p class="ml-3 py-2" v-for="(item, index) in roomInfo" :key="index">{{  index }} : {{ item }}</p>
         </div>
     </div>
 </template>
@@ -233,6 +234,7 @@ async function fetchDataNewRoom(roomId) {
         fetchAccounts(room.members)
     ])
 
+    room.seen = false
     room.latestMessageId = latestMessage._id
     room.latestMessage = latestMessage
     roomMap.value.set(roomId, room)
@@ -277,6 +279,17 @@ function getRoomAvatar(roomId) {
     return getAccountById(accountId).avatar
 }
 
+function getRoomInfo() {
+    if (!currentRoomId.value) {
+        return
+    }
+
+    const room = roomMap.value.get(currentRoomId.value)
+    const accountIds = room.members.filter(accountId => accountId != accountStore._id)
+    const account = accountMap.value.get(accountIds[0])
+    return account
+}
+
 function selectRoom(roomId) {
     currentRoomId.value = roomId
     console.log('user select roomId ' + roomId)
@@ -290,6 +303,10 @@ function onFocusBoxChat() {
 }
 
 function userSeenMessageInRoom(roomId) {
+    if (!roomId) {
+        return
+    }
+
     const room = roomMap.value.get(roomId)
     room.seen = true
     roomMap.value.set(roomId, room)

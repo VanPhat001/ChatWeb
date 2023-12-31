@@ -79,9 +79,15 @@ import { useAccountsStore } from '@/stores/accounts'
 import { useRoomsStore } from '@/stores/rooms'
 import { useSocketStore } from '@/stores/socket'
 import { Icon } from '@iconify/vue'
-import { computed, onBeforeUnmount, onMounted, onUpdated, ref, registerRuntimeCompiler, watch } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, onUpdated, ref, watch } from 'vue'
 import { playReceiveMessageSound, playSendMessageSound } from '@/sounds'
 import Avatar from './Avatar.vue'
+
+const clock = inject('clock')
+
+// clock.register(() => {
+//     console.log(new Date().toLocaleString())
+// })
 
 
 const emits = defineEmits(['on-call', 'on-camera', 'on-info'])
@@ -201,6 +207,5 @@ function receiveMessageFromSocketServer(msg) {
 function showAvatar(index) {
     return index == 0 || messages.value[index - 1].sender != messages.value[index].sender
 }
-
 
 </script>
