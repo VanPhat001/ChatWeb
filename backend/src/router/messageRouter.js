@@ -3,7 +3,21 @@ const router = require('express').Router()
 const { authenToken } = require('../helpers')
 const messageService = require('../services/messageService')
 const roomService = require('../services/roomService')
+const roomContainerService = require('../services/roomContainerService')
 
+
+router.post('/RESET', async (req, res, next) => {
+    try {
+        await Promise.all([
+            messageService.Message.deleteMany({}),
+            roomService.Room.deleteMany({}),
+            roomContainerService.RoomContainer.updateMany({}, { rooms: [] })
+        ])
+        res.send('reset all messages')
+    } catch (error) {
+        next()
+    }
+})
 
 router.post('/latest', authenToken, async (req, res, next) => {
     try {

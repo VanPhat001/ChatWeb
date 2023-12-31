@@ -4,7 +4,8 @@
         <div class="sidebar w-[320px] border border-[--border] h-full flex flex-col">
             <!-- search box -->
             <div class="px-2 py-3 flex">
-                <button class="px-2 hover:bg-gray-700 mr-1 rounded-lg" @click="showResultBox = false" v-show="showResultBox">
+                <button class="px-2 hover:bg-gray-700 mr-1 rounded-lg" @click="showResultBox = false"
+                    v-show="showResultBox">
                     <Icon icon="lets-icons:back" height="24"></Icon>
                 </button>
                 <div class="flex flex-1 bg-[#3a3b3c] rounded-xl px-2 py-1">
@@ -17,7 +18,8 @@
             </div>
 
             <!-- result box -->
-            <AccountList v-show="showResultBox" :account-id-list="searchResultArray" @on-select-account-id="createRoomIfNotExist"></AccountList>
+            <AccountList v-show="showResultBox" :account-id-list="searchResultArray"
+                @on-select-account-id="createRoomIfNotExist"></AccountList>
 
             <!-- rooms -->
             <div v-show="!showResultBox" class="flex-1 h-full overflow-y-auto px-2">
@@ -116,6 +118,24 @@ function findAccountsByRegex() {
 
 function createRoomIfNotExist({ accountId }) {
     console.log('click accountId ' + accountId)
+
+    axiosConfig().post('/room', {
+        accountId1: accountId,
+        accountId2: accountStore._id
+    })
+        .then(result => {
+            const { room, created } = result.data
+            console.log(result.data)
+            if (created) {
+                roomsStore.addOne(room)
+                roomIdSet.value = new Set([...roomIdSet.value, room._id])
+                searchText.value = ''
+                showResultBox.value = false
+            } else {
+
+            }
+        })
+        .catch(console.log)
 }
 
 
@@ -199,6 +219,26 @@ async function fetchAccounts(accountIdArray) {
     return result.data.accounts
 }
 
+// async function fetchAccount(accountId) {
+//     const result = await axiosConfig().get(`/account/${accountId}`)
+//     return result.data.account
+// }
+
+async function fetchDataNewRoom(roomId) {
+    const result = await axiosConfig().get(`/room/${roomId}`)
+    const { room } = result.data
+
+    const [latestMessage, accounts] = await Promise.all([
+        fetchLatestMessages([room.latestMessageId]),
+        fetchAccounts(room.members)
+    ])
+
+    room.latestMessageId = latestMessage._id
+    room.latestMessage = latestMessage
+    roomMap.value.set(roomId, room)
+    accountsStore.addMany(accounts)
+}
+
 function toggleInfoBox() {
     if (infoEl.value.classList.contains('close')) {
         infoEl.value.classList.remove('close')
@@ -251,7 +291,6 @@ function onFocusBoxChat() {
 
 function userSeenMessageInRoom(roomId) {
     const room = roomMap.value.get(roomId)
-    console.log({ roomId, roomMap })
     room.seen = true
     roomMap.value.set(roomId, room)
 }
@@ -264,7 +303,7 @@ function clientOffline({ accountId }) {
     accountsStore.setAccountOffline(accountId)
 }
 
-function receiveMessageFromSocketServer(message) {
+async function receiveMessageFromSocketServer(message) {
     const { sender, roomId, text, _id } = message
     // console.log({ sender, roomId, text })
 
@@ -273,6 +312,11 @@ function receiveMessageFromSocketServer(message) {
         playReceiveMessageSound()
     } else {
         seen = true
+    }
+
+    if (!roomMap.value.has(roomId)) {
+        await fetchDataNewRoom(roomId)
+        roomIdSet.value = new Set([...roomIdSet.value, roomId])
     }
 
     // update room.latestMessageId & room.latestMessage

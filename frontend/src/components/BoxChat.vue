@@ -144,7 +144,7 @@ async function initData(limit = 20) {
     room.value = roomsStore.get(roomId.value)
     updateRoomAvatar()
 
-    const result = await axiosConfig().get(`/room/${roomId.value}`)
+    const result = await axiosConfig().get(`/room/messages/${roomId.value}`)
     messages.value = result.data.messages
 }
 
