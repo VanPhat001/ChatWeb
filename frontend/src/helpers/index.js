@@ -8,16 +8,35 @@ const objArray = [
 ]
 
 function getDifferenceBetween2Date(date1, date2) {
-    let count = Math.abs(date1 - date2)
+    const mSecond = Math.abs(date1 - date2)
+    return convertMillisecondsToTime(mSecond)
+}
 
+function convertMillisecondsToTime(mSecond) {
     for (let i = 0; i < objArray.length; i++) {
         const { value, str } = objArray[i]
-        if (count >= value) {
-            return `${Math.floor(count / value)} ${str} trước`
+        if (mSecond >= value) {
+            return `${Math.floor(mSecond / value)} ${str} trước`
         }
     }
+    return 'vừa xong'
+}
+
+function uploadFileToCloudinary(callback) {
+    const myWidget = cloudinary.createUploadWidget({
+        cloudName: 'djrnf9wmw',
+        uploadPreset: 'top5opph'
+    }, (error, result) => {
+        if (!error && result && result.event === "success") {
+            // console.log('Done! Here is the image info: ', result.info);
+            callback(result)
+        }
+    })
+    myWidget.open()
 }
 
 export {
-    getDifferenceBetween2Date
+    getDifferenceBetween2Date,
+    convertMillisecondsToTime,
+    uploadFileToCloudinary
 }
