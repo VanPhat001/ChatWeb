@@ -12,7 +12,8 @@
                 <!-- info -->
                 <div class="flex">
                     <!-- <img :src="roomAvatar" alt="avatar" class="w-[40px] h-[40px] rounded-full inline-block"> -->
-                    <Avatar :size="40" :src="roomAvatar" :active="isRoomActive" :bottom-percent="-4" :right-percent="-4"></Avatar>
+                    <Avatar :size="40" :src="roomAvatar" :active="isRoomActive" :bottom-percent="-4" :right-percent="-4">
+                    </Avatar>
 
                     <div class="px-2">
                         <p>{{ room.roomName }}</p>
@@ -35,7 +36,8 @@
             </div>
 
             <!-- messages -->
-            <div class="box-middle border border-[--border] h-full overflow-y-auto p-2">
+            <div ref="messageListEl" @scroll="onMessageListScroll(this)"
+                class="box-middle border border-[--border] h-full overflow-y-auto p-2">
                 <div class="message flex mb-1" v-for="(item, index) in messages" :key="index">
                     <template v-if="item.sender != accountStore._id">
                         <div class="avatar-box w-[32px] h-[32px]">
@@ -79,7 +81,7 @@ import { useAccountsStore } from '@/stores/accounts'
 import { useRoomsStore } from '@/stores/rooms'
 import { useSocketStore } from '@/stores/socket'
 import { Icon } from '@iconify/vue'
-import { computed, inject, onBeforeUnmount, onMounted, onUpdated, ref, watch } from 'vue'
+import { computed, inject, onBeforeUnmount, onBeforeUpdate, onMounted, onUpdated, ref, watch } from 'vue'
 import { playReceiveMessageSound, playSendMessageSound } from '@/sounds'
 import Avatar from './Avatar.vue'
 
@@ -103,6 +105,10 @@ const props = defineProps({
 })
 
 const hiddenEl = ref(null)
+const messageListEl = ref(null)
+const segment = ref(0)
+const isLoadingData = ref(false)
+const allowScrollToBottom = ref(true)
 const room = ref(null)
 const text = ref('')
 const roomAvatar = ref('')
@@ -110,7 +116,7 @@ const messages = ref([])
 const roomId = computed(() => props.roomId)
 const socket = computed(() => socketStore.socket)
 
-const isRoomActive =computed(() => {
+const isRoomActive = computed(() => {
     const members = room.value.members
     for (let i = 0; i < members.length; i++) {
         const accountId = members[i]
@@ -124,9 +130,19 @@ const isRoomActive =computed(() => {
 initData()
 socketStore.resSendMessageActions.push(receiveMessageFromSocketServer)
 
+onBeforeUpdate(() => {
+    if (messageListEl.value === null) {
+        return
+    }
+
+    const { scrollTop, scrollHeight, clientHeight } = messageListEl.value
+    allowScrollToBottom.value = (scrollHeight - scrollTop == clientHeight)
+})
 
 onUpdated(() => {
-    hiddenEl.value?.scrollIntoView({ behavior: 'smooth' })
+    if (allowScrollToBottom.value) {
+        hiddenEl.value?.scrollIntoView({ behavior: 'smooth' })
+    }
 })
 
 watch(roomId, (newVal, oldVal) => {
@@ -150,7 +166,7 @@ async function initData(limit = 20) {
     room.value = roomsStore.get(roomId.value)
     updateRoomAvatar()
 
-    const result = await axiosConfig().get(`/room/messages/${roomId.value}`)
+    const result = await axiosConfig().get(`/room/messages/${roomId.value}?limit=30`)
     messages.value = result.data.messages
 }
 
@@ -206,6 +222,33 @@ function receiveMessageFromSocketServer(msg) {
 
 function showAvatar(index) {
     return index == 0 || messages.value[index - 1].sender != messages.value[index].sender
+}
+
+function continueFetchMessage() {
+    axiosConfig().get(`/room/messages/${roomId.value}?skip=${30 * segment.value}&limit=${30}`)
+        .then(result => {
+            const { messages: _messages } = result.data
+            messages.value = _messages.concat(messages.value)
+        })
+        .catch(err => {
+            console.log(err)
+            segment.value--
+        })
+        .finally(() => {
+            isLoadingData.value = false
+        })
+}
+
+function onMessageListScroll() {
+    const { scrollTop, scrollHeight, clientHeight } = messageListEl.value
+    // console.log(scrollHeight - scrollTop, clientHeight)
+
+    if (scrollTop === 0 && !isLoadingData.value) {
+        console.log('continue fetch message, segment ' + segment.value)
+        isLoadingData.value = true
+        segment.value++
+        continueFetchMessage()
+    }
 }
 
 </script>

@@ -1,6 +1,6 @@
 const router = require('express').Router()
 
-const { authenToken } = require('../helpers')
+const { authenToken, convertDocsToArrayObject } = require('../helpers')
 const messageService = require('../services/messageService')
 const roomService = require('../services/roomService')
 const roomContainerService = require('../services/roomContainerService')
@@ -32,12 +32,16 @@ router.post('/', authenToken, async (req, res, next) => {
 })
 
 // get latest 20 message in room
-router.get('/messages/:id', authenToken, async (req, res, next) => {
-    let { messageCount } = req.query
+router.get('/messages/:id', async (req, res, next) => {
+    let { skip, limit } = req.query
     const { id } = req.params
 
-    if (!messageCount) {
-        messageCount = 20
+    if (!limit) {
+        limit = 30
+    }
+
+    if (!skip) {
+        skip = 0
     }
 
     try {
@@ -45,10 +49,13 @@ router.get('/messages/:id', authenToken, async (req, res, next) => {
             roomId: id
         })
             .sort({ createdAt: 'desc' })
-            .limit(messageCount)
-            .sort({ createdAt: 'asc' })
+            .skip(skip)
+            .limit(limit)
 
-        res.send({ status: 'success', messages: messageDocs })
+        const messages = convertDocsToArrayObject(messageDocs)
+        messages.reverse()
+
+        res.send({ status: 'success', messages })
     } catch (error) {
         next(error)
     }
