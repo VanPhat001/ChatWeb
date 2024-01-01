@@ -15,7 +15,7 @@
 
         <!-- text box -->
         <div class="p-2">
-            <p>{{ post.text }}</p>
+            <p ref="textEl" class="line-clamp-4">{{ post.text }}</p>
         </div>
 
         <!-- image box -->
@@ -42,7 +42,7 @@
 
         <div class="flex px-2 mt-2">
             <button class="flex-1 flex hover:bg-gray-600 rounded-lg py-1.5 opacity-75" @click="likePost">
-                <Icon :class="{ 'text-blue-500': userLikePost}" class="m-auto" height="22" icon="mdi:like-outline"></Icon>
+                <Icon :class="{ 'text-blue-500': userLikePost }" class="m-auto" height="22" icon="mdi:like-outline"></Icon>
                 <!-- <Icon height="22" icon="mdi:like"></Icon> -->
             </button>
             <button class="flex-1 flex hover:bg-gray-600 rounded-lg py-1.5 opacity-75">
@@ -63,7 +63,7 @@
 <script setup>
 import { Icon } from '@iconify/vue'
 import Avatar from './Avatar.vue'
-import { computed, inject, onBeforeUnmount, ref } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useAccountsStore } from '@/stores/accounts'
 import axiosConfig from '@/axiosConfig'
 import { getDifferenceBetween2Date } from '@/helpers'
@@ -71,6 +71,8 @@ import { useAccountStore } from '@/stores/account'
 
 const clock = inject('clock')
 
+const textEl = ref(null)
+const showMoreButtonEl = ref(null)
 const props = defineProps(['post'])
 const post = computed(() => props.post)
 const accountsStore = useAccountsStore()
@@ -90,6 +92,7 @@ fetchAccount(post.value.author)
     .catch(console.log)
 
 clock.register(clockTick)
+
 
 onBeforeUnmount(() => {
     clock.unSubcribe(clockTick)
@@ -130,15 +133,15 @@ function likePost() {
         userLikePost.value = true
 
         axiosConfig().patch(`/post/${post.value._id}/account/${accountId}/like`)
-        // .then()
-        .catch(console.log)
+            // .then()
+            .catch(console.log)
     } else {
         post.value.likes.splice(accountIndex, 1)
         userLikePost.value = false
 
         axiosConfig().patch(`/post/${post.value._id}/account/${accountId}/unlike`)
-        // .then()
-        .catch(console.log)
+            // .then()
+            .catch(console.log)
     }
 
 }

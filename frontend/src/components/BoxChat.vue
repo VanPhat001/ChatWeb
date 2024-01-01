@@ -12,12 +12,12 @@
                 <!-- info -->
                 <div class="flex">
                     <!-- <img :src="roomAvatar" alt="avatar" class="w-[40px] h-[40px] rounded-full inline-block"> -->
-                    <Avatar :size="40" :src="roomAvatar" :active="isRoomActive" :bottom-percent="-4" :right-percent="-4">
+                    <Avatar :size="40" :src="roomAvatar" :active="false" :bottom-percent="-4" :right-percent="-4">
                     </Avatar>
 
                     <div class="px-2">
                         <p>{{ room.roomName }}</p>
-                        <p class="text-[10px] opacity-75">Hoạt động 4 giờ trước</p>
+                        <p class="text-[10px] opacity-75">{{ activeTimeString() }}</p>
                     </div>
                 </div>
 
@@ -84,6 +84,7 @@ import { Icon } from '@iconify/vue'
 import { computed, inject, onBeforeUnmount, onBeforeUpdate, onMounted, onUpdated, ref, watch } from 'vue'
 import { playReceiveMessageSound, playSendMessageSound } from '@/sounds'
 import Avatar from './Avatar.vue'
+import { convertMillisecondsToTime, getDifferenceBetween2Date } from '@/helpers'
 
 const clock = inject('clock')
 
@@ -115,17 +116,6 @@ const roomAvatar = ref('')
 const messages = ref([])
 const roomId = computed(() => props.roomId)
 const socket = computed(() => socketStore.socket)
-
-const isRoomActive = computed(() => {
-    const members = room.value.members
-    for (let i = 0; i < members.length; i++) {
-        const accountId = members[i]
-        if (accountId != accountStore._id && accountsStore.accountMap.get(accountId).lastActive === null) {
-            return true
-        }
-    }
-    return false
-})
 
 initData()
 socketStore.resSendMessageActions.push(receiveMessageFromSocketServer)
@@ -248,6 +238,30 @@ function onMessageListScroll() {
         isLoadingData.value = true
         segment.value++
         continueFetchMessage()
+    }
+}
+
+function activeTimeString() {
+    const members = room.value.members
+    if (members.length > 2) {
+        for (let i = 0; i < members.length; i++) {
+            const account = accountsStore.get(members[i])
+            if (account && account.lastActive === null) {
+                return 'Đang hoạt động'
+            }
+        }
+    } else {
+        const anotherAccount = members[0] === accountStore._id ? members[1] : members[0]
+        const account = accountsStore.get(anotherAccount)
+        if (account) {
+            if (account.lastActive === null) {
+                return 'Đang hoạt động'
+            } else {
+                const str = getDifferenceBetween2Date(new Date(), new Date(account.lastActive))
+                return (str == 'vừa xong' ? 'Đang hoạt động' : `Hoạt động ${str}`)
+            }
+        } 
+        return ''
     }
 }
 

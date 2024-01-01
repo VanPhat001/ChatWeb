@@ -50,7 +50,7 @@
 
         <!-- user info -->
         <div ref="infoEl" class="sidebar w-[260px] border border-[--border] transition-all overflow-y-auto close" :set="roomInfo = getRoomInfo()">
-            <p class="ml-3 py-2" v-for="(item, index) in roomInfo" :key="index">{{  index }} : {{ item }}</p>
+            <p class="p-2 break-words" v-for="(item, index) in roomInfo" :key="index">{{  index }} : {{ item }}</p>
         </div>
     </div>
 </template>
