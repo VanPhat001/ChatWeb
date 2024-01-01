@@ -18,7 +18,9 @@
             </div>
 
             <div class="flex-1 my-2 max-h-[300px] min-h-[140px] overflow-y-auto">
-                <p v-html="text" data-placeholder="Bạn đang nghĩ gì?" class="input-tag py-1.5 outline-none" contenteditable></p>
+                <p ref="inputEl" @keyup="updateText" data-placeholder="Bạn đang nghĩ gì?"
+                    class="input-tag py-1.5 outline-none" contenteditable>
+                </p>
                 <img :src="imageUrl" alt="" class="w-full">
             </div>
 
@@ -33,7 +35,7 @@
                 <button class="p-1.5 ml-1.5 hover:bg-gray-500 rounded-full" @click="resetData">
                     <Icon color="lightblue" height="24" icon="system-uicons:reset-hard"></Icon>
                 </button>
-                
+
             </div>
 
             <button @click="createPost" class="bg-[#505151] w-full py-1.5 rounded-lg text-[#858586]"
@@ -44,7 +46,7 @@
 
 <style scoped>
 .input-tag:empty:not(:focus)::before {
-  content: attr(data-placeholder);
+    content: attr(data-placeholder);
 }
 </style>
 
@@ -57,27 +59,36 @@ import { Teleport, computed, ref } from 'vue';
 import axiosConfig from '@/axiosConfig';
 import { uploadFileToCloudinary } from '@/helpers/index'
 
-const emits = defineEmits(['onClose'])
+const emits = defineEmits(['onClose', 'onPostCreated'])
+
 const accountStore = useAccountStore()
 const text = ref('')
+const publicId = ref('')
 const imageUrl = ref('')
-const textEl = ref(null)
+const inputEl = ref(null)
 
 function createPost() {
+    const image = imageUrl.value
+        ? { publicId: publicId.value, url: imageUrl.value }
+        : null
+
     axiosConfig().post('/post', {
         author: accountStore._id,
-        text: text.value
+        text: text.value,
+        image
     })
-        .then(console.log)
+        .then(result => {
+            const { post } = result.data
+            emits('onPostCreated', { post })
+        })
         .catch(console.log)
-
-    emits('onClose')
 }
 
 function uploadFile() {
     uploadFileToCloudinary(result => {
-        const { public_id: publicId, url } = result.info
+        const { public_id, url } = result.info
         imageUrl.value = url
+        publicId.value = public_id
     })
 }
 
@@ -90,9 +101,7 @@ function resetData() {
     text.value = ''
 }
 
-function onFocusInput() {
-    // const range = document.createRange()
-    // console.log(textEl.value)
-    // range.selectNodeContents(textEl.value)
+function updateText() {
+    text.value = inputEl.value.textContent
 }
 </script>

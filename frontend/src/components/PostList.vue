@@ -1,5 +1,5 @@
 <template>
-    <div class="post-list h-full w-full flex flex-col overflow-auto">
+    <div class="post-list h-full w-full flex flex-col-reverse overflow-auto">
         <template v-for="(item, index) in posts" :key="index">
             <Post class="m-auto w-[660px]" :post="item"></Post>
         </template>
@@ -9,15 +9,28 @@
 <script setup>
 import axiosConfig from '@/axiosConfig';
 import Post from './Post.vue'
-import { ref } from 'vue';
+import { computed, onMounted, onUpdated, ref } from 'vue';
 
-const posts = ref([])
-
-axiosConfig().get('/post')
-.then(result => {
-    const _posts = result.data.posts
-    posts.value = _posts
-    
+const props = defineProps({
+    posts: {
+        type: Array,
+        default: []
+    }
 })
-.catch(console.log)
+
+const posts = computed(() => props.posts)
+
+onMounted(() => {
+    scrollToTop()
+})
+
+onUpdated(() => {
+    scrollToTop()
+})
+
+function scrollToTop() {
+    const items = document.getElementsByClassName('post')
+    items[items.length - 1]
+        ?.scrollIntoView({ behavior: 'smooth' })
+}
 </script>

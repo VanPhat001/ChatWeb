@@ -32,6 +32,41 @@ router.route('/')
         }
     })
 
+router.patch('/:id/account/:accountId/like', authenToken, async (req, res, next) => {
+    const { id: postId, accountId } = req.params
+
+    try {
+        const result = await postService.Post.updateOne({
+            _id: postId
+        }, {
+            $push: {
+                likes: accountId
+            }
+        })
+
+        res.send({ status: 'success', result })
+    } catch (error) {
+        next(error)
+    }
+})
+
+router.patch('/:id/account/:accountId/unlike', authenToken, async (req, res, next) => {
+    const { id: postId, accountId } = req.params
+
+    try {
+        const result = await postService.Post.updateOne({
+            _id: postId
+        }, {
+            $pull: {
+                likes: accountId
+            }
+        })
+
+        res.send({ status: 'success', result })
+    } catch (error) {
+        next(error)
+    }
+})
 
 async function getRoomContainer(accountId) {
     const accountDoc = await accountService.getOne({ _id: accountId })

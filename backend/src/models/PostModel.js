@@ -10,8 +10,14 @@ const schema = new Schema({
         default: null
     },
     image: {
-        type: String,
-        default: null
+        publicId: {
+            type: String,
+            default: null
+        },
+        url: {
+            type: String,
+            default: null
+        },
     },
     likes: {
         type: Array,

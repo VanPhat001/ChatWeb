@@ -20,7 +20,7 @@
 
         <!-- image box -->
         <div class="max-h-[360px] flex justify-center items-center overflow-hidden my-1.5" v-if="post.image">
-            <img class="h-full w-full" :src="post.image" alt="image">
+            <img @click="openImage" class="h-full w-full" :src="post.image.url" alt="image">
         </div>
 
         <!-- react -->
@@ -41,8 +41,8 @@
         <div class="h-[1px]" style="border-top: 1px solid #3e4042;"></div>
 
         <div class="flex px-2 mt-2">
-            <button class="flex-1 flex hover:bg-gray-600 rounded-lg py-1.5 opacity-75">
-                <Icon class="m-auto" height="22" icon="mdi:like-outline"></Icon>
+            <button class="flex-1 flex hover:bg-gray-600 rounded-lg py-1.5 opacity-75" @click="likePost">
+                <Icon :class="{ 'text-blue-500': userLikePost}" class="m-auto" height="22" icon="mdi:like-outline"></Icon>
                 <!-- <Icon height="22" icon="mdi:like"></Icon> -->
             </button>
             <button class="flex-1 flex hover:bg-gray-600 rounded-lg py-1.5 opacity-75">
@@ -67,14 +67,20 @@ import { computed, inject, onBeforeUnmount, ref } from 'vue'
 import { useAccountsStore } from '@/stores/accounts'
 import axiosConfig from '@/axiosConfig'
 import { getDifferenceBetween2Date } from '@/helpers'
+import { useAccountStore } from '@/stores/account'
 
 const clock = inject('clock')
 
 const props = defineProps(['post'])
 const post = computed(() => props.post)
 const accountsStore = useAccountsStore()
+const accountStore = useAccountStore()
 const authorAccount = ref({})
 const countTimeActive = ref('')
+const userLikePost = ref(isUserLikePost())
+
+const showImageModal = inject('showImageModal')
+
 
 fetchAccount(post.value.author)
     .then(account => {
@@ -89,7 +95,10 @@ onBeforeUnmount(() => {
     clock.unSubcribe(clockTick)
 })
 
-
+function openImage() {
+    const imageSrc = post.value.image.url
+    showImageModal(imageSrc)
+}
 
 function clockTick() {
     countTimeActive.value = getDifferenceBetween2Date(new Date(), new Date(post.value.createdAt))
@@ -105,4 +114,32 @@ async function fetchAccount(accountId) {
     return result.data.account
 }
 
+function isUserLikePost() {
+    const accountId = accountStore._id
+    return post.value.likes.indexOf(accountId) !== -1
+}
+
+function likePost() {
+    const accountId = accountStore._id
+    const accountIndex = post.value.likes.indexOf(accountId)
+
+    console.log(post.value._id, accountId)
+    if (accountIndex == -1) {
+        // push accountId into post.likes
+        post.value.likes.push(accountId)
+        userLikePost.value = true
+
+        axiosConfig().patch(`/post/${post.value._id}/account/${accountId}/like`)
+        // .then()
+        .catch(console.log)
+    } else {
+        post.value.likes.splice(accountIndex, 1)
+        userLikePost.value = false
+
+        axiosConfig().patch(`/post/${post.value._id}/account/${accountId}/unlike`)
+        // .then()
+        .catch(console.log)
+    }
+
+}
 </script>
