@@ -69,7 +69,7 @@ module.exports = (io, socket) => {
         }
     })
 
-    socket.on('req-call', ({accountIdFrom, accountIdTo}) => {
+    socket.on('req-call', ({ accountIdFrom, accountIdTo }) => {
         // console.log({accountIdFrom, accountIdTo})
         const socketIdTo = account2socket.get(accountIdTo)
         // console.log(account2socket)
@@ -95,6 +95,11 @@ module.exports = (io, socket) => {
     socket.on('call-close', ({ partnerId }) => {
         const socketId = account2socket.get(partnerId)
         io.to(socketId).emit('call-close', {})
+    })
+
+    socket.on('toggle-sound', ({ accountId, muted }) => {
+        const socketId = account2socket.get(accountId)
+        io.to(socketId).emit('toggle-sound', { muted })
     })
 }
 

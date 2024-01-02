@@ -2,7 +2,7 @@ import { Peer } from 'peerjs'
 
 class MediaCall {
     static getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia
-    
+
     constructor(id, openCallback = (mediaCall) => { }) {
         this.peerId = id
         this.onInitCallback = (stream) => { }
@@ -18,6 +18,14 @@ class MediaCall {
         video.addEventListener('loadedmetadata', () => {
             video.play()
         })
+    }
+
+    static changeStateOfSound(stream, muted) {
+        stream.getAudioTracks()[0].enabled = muted
+    }
+
+    static changeStateOfVideo(stream, show) {
+        stream.getVideoTracks()[0].enabled = show
     }
 
     call(partnerId) {

@@ -1,4 +1,8 @@
 <style scoped>
+video {
+    transform: rotateY(180deg);
+}
+
 .animation {
     border-radius: 50%;
     animation-name: animation;
@@ -44,9 +48,8 @@
         </div>
 
 
-        <video ref="remoteVideoEl"
-            class="remote-video absolute top-1/2 left-1/2 w-full h-full -translate-x-1/2 -translate-y-1/2"></video>
-        <video ref="localVideoEl" class="local-video absolute bottom-3 right-3 size-[25%] border-2"></video>
+        <video ref="remoteVideoEl" class="remote-video  w-full h-full"></video>
+        <video ref="localVideoEl" class="local-video rotate-180 absolute bottom-3 right-3 size-[25%] border-2"></video>
 
         <div class="absolute top-[84%] left-1/2 -translate-x-1/2 -translate-y-1/2">
             <button class="p-3.5 rounded-full bg-white opacity-80 hover:opacity-100 mx-2.5" @click="toggleSound">
@@ -98,30 +101,14 @@ const accountStore = useAccountStore()
 const socketStore = useSocketStore()
 let audio = null
 
+
 socketStore.resAcceptCallActions.push(onRecipientAcceptCall)
 socketStore.resRejectCallActions.push(onRecipientRejectCall)
 socketStore.callReadyActions.push(onRecipientReadyCall)
 socketStore.callCloseActions.push(onPartnerCloseCall)
+socketStore.toggleSoundActions.push(onPartnerToggleSound)
 
-onMounted(() => {
-    mediaCall.onInitCallback = (stream) => {
-        localStream.value = stream
-        MediaCall.openVideo(localVideoEl.value, stream)
-    }
-    mediaCall.onStreamCallback = (stream) => {
-        remoteStream.value = stream
-        MediaCall.openVideo(remoteVideoEl.value, stream)
-    }
-})
-
-onBeforeUnmount(() => {
-    socketStore.resAcceptCallActions = socketStore.resAcceptCallActions.filter(func => func != onRecipientAcceptCall)
-    socketStore.resRejectCallActions = socketStore.resRejectCallActions.filter(func => func != onRecipientRejectCall)
-    socketStore.callReadyActions = socketStore.callReadyActions.filter(func => func != onRecipientReadyCall)
-    socketStore.callCloseActions = socketStore.callCloseActions.filter(func => func != onPartnerCloseCall)
-})
-
-console.log(partnerId.value, recevie.value)
+// console.log(partnerId.value, recevie.value)
 if (accountsStore.contain(partnerId.value)) {
     partner.value = accountsStore.get(partnerId.value)
 } else {
@@ -139,43 +126,73 @@ if (recevie.value) {
         accountIdFrom: partnerId.value,
         accountIdTo: accountStore._id
     })
+} else {
+    audio = playIncommingCall()
 }
 
+watch(() => waittingAccept.value,
+    (newVal, oldVal) => {
+        if (!newVal) {
+            stopAudio(audio)
+        }
+    })
 
-// setTimeout(() => {
-//     waittingAccept.value = false
-// }, 5000);
+onMounted(() => {
+    mediaCall.onInitCallback = (stream) => {
+        localStream.value = stream
+        MediaCall.openVideo(localVideoEl.value, stream)
+    }
+    mediaCall.onStreamCallback = (stream) => {
+        remoteStream.value = stream
+        MediaCall.openVideo(remoteVideoEl.value, stream)
+    }
+})
 
-// watch(() => waittingAccept.value,
-//     (newVal, oldVal) => stopAudio(audio))
+onBeforeUnmount(() => {
+    localStream.value?.getTracks().forEach(track => track.stop())
+    remoteStream.value?.getTracks().forEach(track => track.stop())
 
-// onMounted(() => {
-//     setTimeout(() => {
-//         audio = playIncommingCall()
-//     }, 1000);
-// })
+    socketStore.resAcceptCallActions = socketStore.resAcceptCallActions.filter(func => func != onRecipientAcceptCall)
+    socketStore.resRejectCallActions = socketStore.resRejectCallActions.filter(func => func != onRecipientRejectCall)
+    socketStore.callReadyActions = socketStore.callReadyActions.filter(func => func != onRecipientReadyCall)
+    socketStore.callCloseActions = socketStore.callCloseActions.filter(func => func != onPartnerCloseCall)
+    socketStore.toggleSoundActions = socketStore.toggleSoundActions.filter(func => func != onPartnerToggleSound)
+})
+
+
 
 
 function openSound() {
-
+    MediaCall.changeStateOfSound(localStream.value, false)
+    socketStore.socket.emit('toggle-sound', {
+        accountId: partnerId.value,
+        muted: false
+    })
 }
 
 function closeSound() {
+    MediaCall.changeStateOfSound(localStream.value, true)
+    socketStore.socket.emit('toggle-sound', {
+        accountId: partnerId.value,
+        muted: true
+    })
 }
 
 function openCamera() {
-    localStream.value.style.opacity = 1
+    MediaCall.changeStateOfVideo(localStream.value, true)
+    // localVideoEl.value.style.display = 'block'
 }
 
 function closeCamera() {
-    localStream.value.style.opacity = 0
+    MediaCall.changeStateOfVideo(localStream.value, false)
+    // localVideoEl.value.style.display = 'none'
 }
 
 
 function toggleSound() {
     turnOnSound.value = !turnOnSound.value
 
-    if (turnOnSound) {
+    if (turnOnSound.value) {
         openSound()
     } else {
         closeSound()
@@ -185,16 +202,18 @@ function toggleSound() {
 function toggleCamera() {
     turnOnCamera.value = !turnOnCamera.value
 
-    if (turnOnCamera) {
+    if (turnOnCamera.value) {
         openCamera()
     } else {
         closeCamera()
     }
 }
 
-function rejectCall() {    
-    localStream.value?.getTracks().forEach(track => track.stop())
-    remoteStream.value?.getTracks().forEach(track => track.stop())
+function onPartnerToggleSound({ muted }) {
+    MediaCall.changeStateOfSound(remoteStream.value, muted)
+}
+
+function rejectCall() {
     socketStore.socket.emit('call-close', { partnerId: partnerId.value })
     router.back()
 }
@@ -203,8 +222,6 @@ function rejectCall() {
 //#region CALL --- CALLER SIDE
 // caller side
 function onPartnerCloseCall() {
-    localStream.value?.getTracks().forEach(track => track.stop())
-    remoteStream.value?.getTracks().forEach(track => track.stop())
     router.back()
 }
 

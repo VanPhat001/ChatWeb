@@ -11,6 +11,7 @@ export const useSocketStore = defineStore('socket', () => {
     const resRejectCallActions = []
     const callReadyActions = []
     const callCloseActions = []
+    const toggleSoundActions = []
     const clientOnlineActions = []
     const clientOfflineActions = []
 
@@ -62,6 +63,10 @@ export const useSocketStore = defineStore('socket', () => {
         _socket.on('call-close', data => {
             callCloseActions.forEach(func => func(data))
         })
+
+        _socket.on('toggle-sound', data => {
+            toggleSoundActions.forEach(func => func(data))
+        })
     }
 
     function registerClientInfo(accountId) {
@@ -76,6 +81,7 @@ export const useSocketStore = defineStore('socket', () => {
     return {
         socket, resSendMessageActions, clientOnlineActions, clientOfflineActions, resCallActions,
         resAcceptCallActions, resRejectCallActions, callReadyActions, callCloseActions,
+        toggleSoundActions,
         connectToSocketServer,
         registerClientInfo,
     }
