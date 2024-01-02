@@ -6,6 +6,11 @@ import { ref } from "vue"
 export const useSocketStore = defineStore('socket', () => {
     const socket = ref(null)
     const resSendMessageActions = []
+    const resCallActions = []
+    const resAcceptCallActions = []
+    const resRejectCallActions = []
+    const callReadyActions = []
+    const callCloseActions = []
     const clientOnlineActions = []
     const clientOfflineActions = []
 
@@ -37,6 +42,26 @@ export const useSocketStore = defineStore('socket', () => {
         _socket.on('res-send-message', data => {
             resSendMessageActions.forEach(func => func(data))
         })
+
+        _socket.on('res-call', data => {
+            resCallActions.forEach(func => func(data))
+        })
+
+        _socket.on('res-reject-call', data => {
+            resRejectCallActions.forEach(func => func(data))
+        })
+
+        _socket.on('res-accept-call', data => {
+            resAcceptCallActions.forEach(func => func(data))
+        })
+
+        _socket.on('call-ready', data => {
+            callReadyActions.forEach(func => func(data))
+        })
+
+        _socket.on('call-close', data => {
+            callCloseActions.forEach(func => func(data))
+        })
     }
 
     function registerClientInfo(accountId) {
@@ -49,7 +74,8 @@ export const useSocketStore = defineStore('socket', () => {
     }
 
     return {
-        socket, resSendMessageActions, clientOnlineActions, clientOfflineActions,
+        socket, resSendMessageActions, clientOnlineActions, clientOfflineActions, resCallActions,
+        resAcceptCallActions, resRejectCallActions, callReadyActions, callCloseActions,
         connectToSocketServer,
         registerClientInfo,
     }

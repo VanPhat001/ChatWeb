@@ -23,13 +23,13 @@
 
                 <!-- controls -->
                 <div class="ml-auto">
-                    <button @click="emits('on-call')" class="text-[#0084ff] px-3 py-2 rounded-md hover:bg-gray-700">
+                    <button @click="onCallClick" class="text-[#0084ff] px-3 py-2 rounded-md hover:bg-gray-700">
                         <Icon icon="material-symbols:call" height="22"></Icon>
                     </button>
-                    <button @click="emits('on-camera')" class="text-[#0084ff] px-3 py-2 rounded-md hover:bg-gray-700 ml-1">
+                    <button @click="onCameraClick" class="text-[#0084ff] px-3 py-2 rounded-md hover:bg-gray-700 ml-1">
                         <Icon icon="jam:video-camera-f" height="22"></Icon>
                     </button>
-                    <button @click="emits('on-info')" class="text-[#0084ff] px-3 py-2 rounded-md hover:bg-gray-700 ml-1">
+                    <button @click="onInfoClick" class="text-[#0084ff] px-3 py-2 rounded-md hover:bg-gray-700 ml-1">
                         <Icon icon="jam:info-f" height="22"></Icon>
                     </button>
                 </div>
@@ -85,6 +85,8 @@ import { computed, inject, onBeforeUnmount, onBeforeUpdate, onMounted, onUpdated
 import { playReceiveMessageSound, playSendMessageSound } from '@/sounds'
 import Avatar from './Avatar.vue'
 import { convertMillisecondsToTime, getDifferenceBetween2Date } from '@/helpers'
+import { start } from '@cloudinary/url-gen/qualifiers/textAlignment'
+import router from '@/router'
 
 const clock = inject('clock')
 
@@ -260,9 +262,36 @@ function activeTimeString() {
                 const str = getDifferenceBetween2Date(new Date(), new Date(account.lastActive))
                 return (str == 'vừa xong' ? 'Đang hoạt động' : `Hoạt động ${str}`)
             }
-        } 
+        }
         return ''
     }
+}
+
+function startCall() {
+    // const mediaCall = window.mediaCall
+    // console.log({ mediaCall })
+    const members = room.value.members
+    const anotherMember = members[0] == accountStore._id ? members[1] : members[0]
+
+    socket.value.emit('req-call', {
+        accountIdFrom: accountStore._id,
+        accountIdTo: anotherMember
+    })
+    router.push({ name: 'call', params: { partnerId: anotherMember } })
+}
+
+function onCallClick() {
+    startCall()
+    emits('on-call')
+}
+
+function onCameraClick() {
+    startCall()
+    emits('on-camera')
+}
+
+function onInfoClick() {
+    emits('on-info')
 }
 
 </script>
