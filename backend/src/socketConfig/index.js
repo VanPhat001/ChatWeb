@@ -69,6 +69,33 @@ module.exports = (io, socket) => {
         }
     })
 
+    socket.on('req-call', ({accountIdFrom, accountIdTo}) => {
+        // console.log({accountIdFrom, accountIdTo})
+        const socketIdTo = account2socket.get(accountIdTo)
+        // console.log(account2socket)
+        // console.log({accountIdFrom, accountIdTo, socketIdReceive})
+        io.to(socketIdTo).emit('res-call', { accountIdFrom, accountIdTo })
+    })
+
+    socket.on('req-reject-call', ({ accountIdFrom, accountIdTo }) => {
+        const socketIdFrom = account2socket.get(accountIdFrom)
+        io.to(socketIdFrom).emit('res-reject-call', { accountIdFrom, accountIdTo })
+    })
+
+    socket.on('req-accept-call', ({ accountIdFrom, accountIdTo }) => {
+        const socketIdFrom = account2socket.get(accountIdFrom)
+        io.to(socketIdFrom).emit('res-accept-call', { accountIdFrom, accountIdTo })
+    })
+
+    socket.on('call-ready', ({ accountIdFrom, accountIdTo }) => {
+        const socketIdFrom = account2socket.get(accountIdFrom)
+        io.to(socketIdFrom).emit('call-ready', { accountIdFrom, accountIdTo })
+    })
+
+    socket.on('call-close', ({ partnerId }) => {
+        const socketId = account2socket.get(partnerId)
+        io.to(socketId).emit('call-close', {})
+    })
 }
 
 
