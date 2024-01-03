@@ -3,7 +3,7 @@ const { Schema, model } = require('mongoose')
 const schema = new Schema({
     roomName: {
         type: String,
-        required: true,
+        default: null,
     },
     members: {
         type: [String],

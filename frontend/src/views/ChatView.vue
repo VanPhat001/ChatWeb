@@ -49,8 +49,9 @@
             :room-id="currentRoomId"></BoxChat>
 
         <!-- user info -->
-        <div ref="infoEl" class="sidebar w-[260px] border border-[--border] transition-all overflow-y-auto close" :set="roomInfo = getRoomInfo()">
-            <p class="p-2 break-words" v-for="(item, index) in roomInfo" :key="index">{{  index }} : {{ item }}</p>
+        <div ref="infoEl" class="sidebar w-[260px] border border-[--border] transition-all overflow-y-auto close"
+            :set="roomInfo = getRoomInfo()">
+            <p class="p-2 break-words" v-for="(item, index) in roomInfo" :key="index">{{ index }} : {{ item }}</p>
         </div>
     </div>
 </template>
@@ -88,7 +89,6 @@ const showResultBox = ref(false)
 const currentRoomId = ref(null)
 const searchText = ref('')
 const cookies = inject('$cookies')
-const accessToken = cookies.get('access_token')
 
 const accountMap = computed(() => accountsStore.accountMap)
 const roomMap = computed(() => roomsStore.roomMap)
@@ -97,8 +97,99 @@ const debounce = new Debounce(() => {
     findAccountsByRegex()
 }, 300)
 
-watch(() => searchText.value, (newVal, oldVal) => {
+watch(() => searchText.value, (__) => {
     debounce.reStart()
+})
+
+
+
+// console.log({ tookenInRoom: cookies.get('access_token') })
+// console.log({ default: axiosConfig().defaults })
+axiosConfig().get('/roomContainer')
+    .then(async result => {
+        const _rooms = result.data.rooms
+
+        let allMembers = []
+        _rooms.forEach(room => {
+            allMembers = allMembers.concat(room.members)
+            room.seen = true
+        })
+
+        const latestMessages = await fetchLatestMessages(_rooms.map(room => room.latestMessageId))
+        latestMessages.forEach(msg => {
+            if (msg === null) {
+                return
+            }
+
+            for (let i = 0; i < _rooms.length; i++) {
+                if (_rooms[i]._id == msg.roomId) {
+                    _rooms[i].latestMessage = msg
+                    break
+                }
+            }
+        })
+
+        const _accountIdSet = new Set(allMembers)
+        let _accounts = []
+        _accountIdSet.forEach(accountId => {
+            if (accountsStore.contain(accountId)) {
+                _accountIdSet.delete(accountId)
+                _accounts.push(accountsStore.get(accountId))
+            }
+        })
+        _accounts = _accounts.concat(await fetchAccounts([..._accountIdSet]))
+
+        _rooms.forEach((room, index) => {
+            if (room.roomName) {
+                return
+            }
+
+            if (room.avatar) {
+                return
+            }
+
+            const members = room.members
+            const partnerId = (members[0] == accountStore._id ? members[1] : members[0])
+            let account = accountsStore.get(partnerId)
+
+            if (!account) {
+                account = _accounts.filter(item => item._id == partnerId)[0]
+            }
+
+            room.roomName = account.name
+            room.avatar = account.avatar
+
+            _rooms[index] = room
+        })
+
+        roomsStore.addMany(_rooms)
+        accountsStore.addMany(_accounts)
+        accountIdSet.value = new Set(allMembers)
+        roomIdSet.value = _rooms.map(room => room._id)
+
+        // console.log({accountIdSet, roomIdSet})
+
+        socketStore.resSendMessageActions.push(receiveMessageFromSocketServer)
+        socketStore.clientOnlineActions.push(clientOnline)
+        socketStore.clientOfflineActions.push(clientOffline)
+    })
+    .catch(err => console.log(err))
+
+onBeforeUnmount(() => {
+    let index = socketStore.resSendMessageActions.indexOf(receiveMessageFromSocketServer)
+    if (index != -1) {
+        socketStore.resSendMessageActions.splice(index, 1)
+    }
+
+    index = socketStore.resSendMessageActions.indexOf(clientOnline)
+    if (index != -1) {
+        socketStore.resSendMessageActions.splice(index, 1)
+    }
+
+    index = socketStore.resSendMessageActions.indexOf(clientOffline)
+    if (index != -1) {
+        socketStore.resSendMessageActions.splice(index, 1)
+    }
 })
 
 function findAccountsByRegex() {
@@ -139,72 +230,6 @@ function createRoomIfNotExist({ accountId }) {
         .catch(console.log)
 }
 
-
-// console.log({ tookenInRoom: cookies.get('access_token') })
-// console.log({ default: axiosConfig().defaults })
-axiosConfig().get('/roomContainer')
-    .then(async result => {
-        const _rooms = result.data.rooms
-
-        let allMembers = []
-        _rooms.forEach(room => {
-            allMembers = allMembers.concat(room.members)
-            room.seen = true
-        })
-
-        const latestMessages = await fetchLatestMessages(_rooms.map(room => room.latestMessageId))
-        latestMessages.forEach(msg => {
-            if (msg === null) {
-                return
-            }
-
-            for (let i = 0; i < _rooms.length; i++) {
-                if (_rooms[i]._id == msg.roomId) {
-                    _rooms[i].latestMessage = msg
-                    break
-                }
-            }
-        })
-
-        const _accountIdSet = new Set(allMembers)
-        let _accounts = []
-        _accountIdSet.forEach(accountId => {
-            if (accountsStore.contain(accountId)) {
-                _accountIdSet.delete(accountId)
-                _accounts.push(accountsStore.get(accountId))
-            }
-        })
-        _accounts = _accounts.concat(await fetchAccounts([..._accountIdSet]))
-
-        roomsStore.addMany(_rooms)
-        accountsStore.addMany(_accounts)
-        accountIdSet.value = new Set(allMembers)
-        roomIdSet.value = _rooms.map(room => room._id)
-
-        // console.log({accountIdSet, roomIdSet})
-
-        socketStore.resSendMessageActions.push(receiveMessageFromSocketServer)
-        socketStore.clientOnlineActions.push(clientOnline)
-        socketStore.clientOfflineActions.push(clientOffline)
-    })
-    .catch(err => console.log(err))
-
-onBeforeUnmount(() => {
-    let index = socketStore.resSendMessageActions.indexOf(receiveMessageFromSocketServer)
-    if (index != -1) {
-        socketStore.resSendMessageActions.splice(index, 1)
-    }
-
-    index = socketStore.resSendMessageActions.indexOf(clientOnline)
-    if (index != -1) {
-        socketStore.resSendMessageActions.splice(index, 1)
-    }
-
-    index = socketStore.resSendMessageActions.indexOf(clientOffline)
-    if (index != -1) {
-        socketStore.resSendMessageActions.splice(index, 1)
-    }
-})
 
 async function fetchLatestMessages(latestMessageIdArray) {
     const result = await axiosConfig().post('/message/latest', {
@@ -321,7 +346,7 @@ function clientOffline({ accountId }) {
 }
 
 async function receiveMessageFromSocketServer(message) {
-    const { sender, roomId, text, _id } = message
+    const { sender, roomId, _id } = message
     // console.log({ sender, roomId, text })
 
     let seen = false

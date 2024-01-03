@@ -12,7 +12,7 @@
                 <!-- info -->
                 <div class="flex">
                     <!-- <img :src="roomAvatar" alt="avatar" class="w-[40px] h-[40px] rounded-full inline-block"> -->
-                    <Avatar :size="40" :src="roomAvatar" :active="false" :bottom-percent="-4" :right-percent="-4">
+                    <Avatar :size="40" :src="room.avatar" :active="false" :bottom-percent="-4" :right-percent="-4">
                     </Avatar>
 
                     <div class="px-2">
@@ -81,14 +81,12 @@ import { useAccountsStore } from '@/stores/accounts'
 import { useRoomsStore } from '@/stores/rooms'
 import { useSocketStore } from '@/stores/socket'
 import { Icon } from '@iconify/vue'
-import { computed, inject, onBeforeUnmount, onBeforeUpdate, onMounted, onUpdated, ref, watch } from 'vue'
-import { playReceiveMessageSound, playSendMessageSound } from '@/sounds'
+import { computed, inject, onBeforeUnmount, onBeforeUpdate, onUpdated, ref, watch } from 'vue'
+import { playSendMessageSound } from '@/sounds'
 import Avatar from './Avatar.vue'
-import { convertMillisecondsToTime, getDifferenceBetween2Date } from '@/helpers'
-import { start } from '@cloudinary/url-gen/qualifiers/textAlignment'
+import { getDifferenceBetween2Date } from '@/helpers'
 import router from '@/router'
 
-const clock = inject('clock')
 
 // clock.register(() => {
 //     console.log(new Date().toLocaleString())
@@ -150,33 +148,18 @@ onBeforeUnmount(() => {
     }
 })
 
-async function initData(limit = 20) {
+async function initData(_limit = 20) {
     if (roomId.value === null) {
         return
     }
 
+    updateRoomInfo(roomId.value)
     room.value = roomsStore.get(roomId.value)
-    updateRoomAvatar()
 
     const result = await axiosConfig().get(`/room/messages/${roomId.value}?limit=30`)
     messages.value = result.data.messages
 }
 
-function updateRoomAvatar() {
-    if (!room.value) {
-        return
-    }
-
-    const { avatar, members } = room.value
-
-    if (avatar) {
-        roomAvatar.value = avatar
-        return
-    }
-
-    const anotherPersonId = (members[0] == accountStore._id ? members[1] : members[0])
-    roomAvatar.value = accountsStore.get(anotherPersonId).avatar
-}
 
 function sendMessage() {
     if (!text.value.trim()) {
@@ -232,7 +215,7 @@ function continueFetchMessage() {
 }
 
 function onMessageListScroll() {
-    const { scrollTop, scrollHeight, clientHeight } = messageListEl.value
+    const { scrollTop } = messageListEl.value
     // console.log(scrollHeight - scrollTop, clientHeight)
 
     if (scrollTop === 0 && !isLoadingData.value) {
@@ -292,6 +275,26 @@ function onCameraClick() {
 
 function onInfoClick() {
     emits('on-info')
+}
+
+function updateRoomInfo(roomId) {
+    const _room = roomsStore.get(roomId)
+
+    // room chat contain 2 account
+    // or this problem has solved at chatview.vue
+    if (!_room.avatar) {
+        const members = _room.members
+        const partnerId = (members[0] == accountStore._id ? members[1] : members[0])
+        const account = accountsStore.get(partnerId)
+        _room.avatar = account.avatar
+        _room.roomName = account.name
+
+        roomsStore.roomMap.set(roomId, _room)
+    }
+    else {
+        // room chat contain at least 2 account
+        // available avatar and room name
+    }
 }
 
 </script>

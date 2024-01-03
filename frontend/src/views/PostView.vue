@@ -16,7 +16,7 @@
 
             <!-- text box -->
             <div class="p-2">
-                <p ref="textEl" class="line-clamp-4">{{ post.text }}</p>
+                <p ref="textEl" class="">{{ post.text }}</p>
             </div>
 
             <!-- image box -->

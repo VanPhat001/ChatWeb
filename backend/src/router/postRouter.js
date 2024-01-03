@@ -3,7 +3,6 @@ const router = require('express').Router()
 const { authenToken } = require('../helpers')
 const postService = require('../services/postService')
 const accountService = require('../services/accountService')
-const roomContainerService = require('../services/roomContainerService')
 const postContainerService = require('../services/postContainerService')
 const commentService = require('../services/commentService')
 
