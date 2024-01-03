@@ -1,5 +1,5 @@
 <template>
-    <div class="avatar relative" :style="{ 'width': size + 'px', 'height': size + 'px' }">
+    <div class="avatar relative" :style="{ 'width': size + 'px', 'height': size + 'px' }" @click="redirectToProfileView">
         <img :src="src" alt="avatar" class="w-full h-full rounded-full">
         <div class="w-4 h-4 border-[2px] border-[--background] bg-green-600 rounded-full absolute"
             :style="{ 'bottom': bottomPercent + '%', 'right': rightPercent + '%' }" v-show="active"></div>
@@ -7,6 +7,8 @@
 </template>
 
 <script setup>
+import router from '@/router';
+import { stringify } from 'postcss';
 import { computed } from 'vue';
 
 // https://cdn.waifu.im/195.jpeg
@@ -31,6 +33,10 @@ const props = defineProps({
     bottomPercent: {
         type: Number,
         default: 3
+    },
+    accountId: {
+        type: String,
+        default: null
     }
 })
 
@@ -39,4 +45,11 @@ const active = computed(() => props.active)
 const size = computed(() => props.size)
 const rightPercent = computed(() => props.rightPercent)
 const bottomPercent = computed(() => props.bottomPercent)
+const accountId = computed(() => props.accountId)
+
+function redirectToProfileView() {
+    if (accountId.value) {
+        router.push({ name: 'profile', params: { id: accountId.value } })
+    }
+}
 </script>

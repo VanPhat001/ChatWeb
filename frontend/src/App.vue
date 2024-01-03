@@ -25,13 +25,15 @@ import Loading from '@/components/Loading.vue'
 import MediaCall from '@/peer/MediaCall'
 import { playIncommingCall } from './sounds'
 import IncommingCall from './components/IncommingCall.vue'
+import { useAccountsStore } from './stores/accounts'
 
 const route = useRoute()
+const accountStore = useAccountStore()
+const accountsStore = useAccountsStore()
+const socketStore = useSocketStore()
+const cookies = inject('$cookies')
 const mainEl = ref(null)
 const headerEl = ref(null)
-const cookies = inject('$cookies')
-const accountStore = useAccountStore()
-const socketStore = useSocketStore()
 const showLoading = ref(true)
 const showIncommingCall = ref(false)
 const incommingData = reactive({
@@ -63,13 +65,15 @@ axiosConfig().post('/verify')
     const id = setInterval(() => {
       if (socketStore.socket !== null && accountStore._id !== null) {
         clearInterval(id)
+
+        const account = accountStore.clone()
+        accountsStore.addOne(account)
+        socketStore.registerClientInfo(accountStore._id)
+        const mediaCall = new MediaCall(accountStore._id, _mediaCall => { })
+        window.mediaCall = mediaCall
+  
+        removeLoadingElement()
       }
-
-      socketStore.registerClientInfo(accountStore._id)
-      const mediaCall = new MediaCall(accountStore._id, _mediaCall => { })
-      window.mediaCall = mediaCall
-
-      removeLoadingElement()
     }, 100)
   })
   .catch(err => {

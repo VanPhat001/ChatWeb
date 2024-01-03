@@ -5,6 +5,7 @@ export const useAccountsStore = defineStore('accounts', () => {
     const accountMap = ref(new Map())
 
     function addOne(account) {
+        console.log(account._id)
         if (!accountMap.value.has(account._id)) {
             accountMap.value.set(account._id, account)
         }

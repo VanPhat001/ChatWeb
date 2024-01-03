@@ -1,8 +1,6 @@
 <template>
-    <div class="post-list h-full w-full flex flex-col-reverse overflow-auto">
-        <template v-for="(item, index) in posts" :key="index">
-            <Post class="m-auto w-[660px]" :post="item"></Post>
-        </template>
+    <div class="post-list flex flex-col-reverse" :class="{ 'overflow-y-auto h-full w-full': allowScrollbar }">
+        <Post class="m-auto w-[660px]" v-for="(item, index) in posts" :key="index" :post="item"></Post>
     </div>
 </template>
 
@@ -15,10 +13,15 @@ const props = defineProps({
     posts: {
         type: Array,
         default: []
+    },
+    allowScrollbar: {
+        type: Boolean,
+        default: true
     }
 })
 
 const posts = computed(() => props.posts)
+const allowScrollbar = computed(() => props.allowScrollbar)
 
 onMounted(() => {
     scrollToTop()

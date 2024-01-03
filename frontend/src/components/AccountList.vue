@@ -2,7 +2,7 @@
     <div class="account-list px-1 overflow-y-auto">
         <button class="w-full flex items-center rounded-lg p-2 hover:bg-gray-600"
             v-for="(accountId, index) in accountIdList" :key="index" @click="emits('onSelectAccountId', { accountId })">
-            <Avatar :active="false" :size="44" :src="getAvatar(accountId)"></Avatar>
+            <Avatar :active="false" :size="44" :src="getAvatar(accountId)" :account-id="accountId"></Avatar>
             <p class="ml-2 text-xl">{{ getName(accountId) }}</p>
         </button>
     </div>

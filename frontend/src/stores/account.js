@@ -44,9 +44,25 @@ export const useAccountStore = defineStore('account', () => {
         }
     }
 
+    function clone() {
+        return {
+            _id: _id.value,
+            username: username.value,
+            name: name.value,
+            gender: gender.value,
+            avatar: avatar.value,
+            background: background.value,
+            dateOfBirth: dateOfBirth.value,
+            roomContainerId: roomContainerId.value,
+            postContainerId: postContainerId.value,
+            friendContainerId: friendContainerId.value,
+            requestAddFriendContainerId: requestAddFriendContainerId.value
+        }
+    }
+
     return {
         _id, username, name, gender, avatar, background, dateOfBirth, roomContainerId,
         postContainerId, friendContainerId, requestAddFriendContainerId,
-        fetchAccount
+        fetchAccount, clone
     }
 })

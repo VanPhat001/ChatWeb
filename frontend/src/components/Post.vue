@@ -2,7 +2,7 @@
     <div class="post bg-[#242526] w-[500px] my-3 rounded-lg p-2">
         <!-- post header -->
         <div class="flex items-center">
-            <Avatar :src="authorAccount.avatar"></Avatar>
+            <Avatar :src="authorAccount.avatar" :account-id="authorAccount._id"></Avatar>
             <div class="ml-2">
                 <p>{{ authorAccount.name }}</p>
                 <p class="opacity-70 text-[80%]">{{ countTimeActive }}</p>
@@ -19,7 +19,7 @@
         </div>
 
         <!-- image box -->
-        <div class="max-h-[360px] flex justify-center items-center overflow-hidden my-1.5" v-if="post.image">
+        <div class="max-h-[360px] flex justify-center items-center overflow-hidden my-1.5" v-if="post.image.url">
             <img @click="openImage" class="h-full w-full" :src="post.image.url" alt="image">
         </div>
 
@@ -42,10 +42,10 @@
 
         <div class="flex px-2 mt-2">
             <button class="flex-1 flex hover:bg-gray-600 rounded-lg py-1.5 opacity-75" @click="likePost">
-                <Icon :class="{ 'text-blue-500': userLikePost }" class="m-auto" height="22" icon="mdi:like-outline"></Icon>
-                <!-- <Icon height="22" icon="mdi:like"></Icon> -->
+                <Icon v-if="userLikePost" class="m-auto text-blue-500" height="22" icon="mdi:like"></Icon>
+                <Icon v-else class="m-auto" height="22" icon="mdi:like-outline"></Icon>
             </button>
-            <button class="flex-1 flex hover:bg-gray-600 rounded-lg py-1.5 opacity-75">
+            <button class="flex-1 flex hover:bg-gray-600 rounded-lg py-1.5 opacity-75" @click="openPostView">
                 <Icon class="m-auto" height="22" icon="mingcute:comment-line"></Icon>
                 <!-- <Icon height="22" icon="mingcute:comment-fill"></Icon> -->
             </button>
@@ -53,10 +53,7 @@
                 <Icon class="m-auto" height="22" icon="majesticons:share-line"></Icon>
                 <!-- <Icon height="22" icon="majesticons:share"></Icon> -->
             </button>
-
         </div>
-
-        <!-- comment box -->
     </div>
 </template>
 
@@ -68,9 +65,13 @@ import { useAccountsStore } from '@/stores/accounts'
 import axiosConfig from '@/axiosConfig'
 import { getDifferenceBetween2Date } from '@/helpers'
 import { useAccountStore } from '@/stores/account'
+import { useRoute } from 'vue-router'
+
 
 const clock = inject('clock')
 
+const route = useRoute()
+const showPostModal = ref(false)
 const textEl = ref(null)
 const showMoreButtonEl = ref(null)
 const props = defineProps(['post'])
@@ -143,6 +144,9 @@ function likePost() {
             // .then()
             .catch(console.log)
     }
+}
 
+function openPostView() {
+    window.open('/post/' + post.value._id)
 }
 </script>

@@ -32,6 +32,44 @@ router.route('/')
         }
     })
 
+router.get('/:id', async (req, res, next) => {
+    const { id } = req.params
+
+    try {
+        const doc = await postService.getOne({ _id: id })
+        res.send({ status: 'success', post: doc })
+    } catch (error) {
+        next(error)
+    }
+})
+
+router.get('/author/:author', authenToken, async (req, res, next) => {
+    const { author } = req.params
+    let { skip, limit } = req.query
+
+    if (!skip) {
+        skip = 0
+    }
+
+    if (!limit) {
+        limit = 10
+    }
+
+    try {
+        const docs = await postService.getAll({ author: author })
+            .sort({ createdAt: 'desc' })
+            .skip(skip)
+            .limit(limit)
+
+        const posts = docs.filter(doc => doc.toObject())
+        posts.reverse()
+
+        res.send({ status: 'success', posts })
+    } catch (error) {
+        next(error)
+    }
+})
+
 router.patch('/:id/account/:accountId/like', authenToken, async (req, res, next) => {
     const { id: postId, accountId } = req.params
 
