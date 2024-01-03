@@ -1,9 +1,3 @@
-<style scoped>
-* {
-    /* border: 1px solid red; */
-}
-</style>
-
 <template>
     <div class="profile-view w-full h-full overflow-y-auto">
 
@@ -46,15 +40,15 @@
 
 
 <script setup>
-import axiosConfig from '@/axiosConfig';
-import Avatar from '@/components/Avatar.vue';
-import Error from '@/components/Error.vue';
-import ImageModal from '@/components/ImageModal.vue';
-import PostList from '@/components/PostList.vue';
-import { useAccountStore } from '@/stores/account';
-import { useAccountsStore } from '@/stores/accounts';
-import { computed, provide, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import axiosConfig from '@/axiosConfig'
+import Avatar from '@/components/Avatar.vue'
+import Error from '@/components/Error.vue'
+import ImageModal from '@/components/ImageModal.vue'
+import PostList from '@/components/PostList.vue'
+import { useAccountStore } from '@/stores/account'
+import { useAccountsStore } from '@/stores/accounts'
+import { computed, provide, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 
 provide('showImageModal', showImageModal)

@@ -4,9 +4,29 @@ const { authenToken } = require('../helpers')
 const postService = require('../services/postService')
 const accountService = require('../services/accountService')
 const roomContainerService = require('../services/roomContainerService')
+const postContainerService = require('../services/postContainerService')
+const commentService = require('../services/commentService')
+
+router.post('/RESET', async (req, res, next) => {
+    const task1 = postService.delete({})
+    const task2 = commentService.delete({})
+    const task3 = postContainerService.PostContainer.updateMany({}, {
+        $set: {
+            posts: []
+        }
+    })
+
+    try {
+        await Promise.all([task1, task2, task3])
+        res.send({ status: 'success'})
+    } catch (error) {
+        next(error)
+    }
+})
 
 router.route('/')
-    .get(authenToken, async (req, res, next) => {
+    // Lấy tất cả post
+    .get(authenToken, async (_req, res, next) => {
         try {
             const postDocs = await postService.getAll()
             res.send({ status: 'success', posts: postDocs })
@@ -14,6 +34,7 @@ router.route('/')
             next(error)
         }
     })
+    // Tạo bài post mới và thêm nó vào postContainer
     .post(authenToken, async (req, res, next) => {
         const { author, text, image } = req.body
 
@@ -24,7 +45,7 @@ router.route('/')
                 image
             })
 
-            await getRoomContainer(author)
+            await addPostIntoPostContainer(author, postDoc._id)
 
             res.send({ status: 'success', post: postDoc })
         } catch (error) {
@@ -32,6 +53,7 @@ router.route('/')
         }
     })
 
+// lấy bài post theo id
 router.get('/:id', async (req, res, next) => {
     const { id } = req.params
 
@@ -43,6 +65,7 @@ router.get('/:id', async (req, res, next) => {
     }
 })
 
+// lấy tất cả bài post theo id tác giả (author)
 router.get('/author/:author', authenToken, async (req, res, next) => {
     const { author } = req.params
     let { skip, limit } = req.query
@@ -70,6 +93,7 @@ router.get('/author/:author', authenToken, async (req, res, next) => {
     }
 })
 
+// thêm thành viên vào mảng likes của post với postId tương ứng
 router.patch('/:id/account/:accountId/like', authenToken, async (req, res, next) => {
     const { id: postId, accountId } = req.params
 
@@ -88,6 +112,7 @@ router.patch('/:id/account/:accountId/like', authenToken, async (req, res, next)
     }
 })
 
+// xoá thành viên khỏi mảng likes của bài post với postid tương ứng
 router.patch('/:id/account/:accountId/unlike', authenToken, async (req, res, next) => {
     const { id: postId, accountId } = req.params
 
@@ -106,9 +131,16 @@ router.patch('/:id/account/:accountId/unlike', authenToken, async (req, res, nex
     }
 })
 
-async function getRoomContainer(accountId) {
+
+async function addPostIntoPostContainer(accountId, post) {
     const accountDoc = await accountService.getOne({ _id: accountId })
-    return await roomContainerService.getOne({ _id: accountDoc.roomContainerId })
+    await postContainerService.PostContainer.findOneAndUpdate({
+        _id: accountDoc.postContainerId
+    }, {
+        $push: {
+            posts: post
+        }
+    })
 }
 
 module.exports = router

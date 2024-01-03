@@ -132,8 +132,9 @@ if (recevie.value) {
 
 watch(() => waittingAccept.value,
     (newVal, oldVal) => {
-        if (!newVal) {
+        if (!newVal && audio) {
             stopAudio(audio)
+            audio = null
         }
     })
 
@@ -149,6 +150,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+    stopAudio(audio)
     localStream.value?.getTracks().forEach(track => track.stop())
     remoteStream.value?.getTracks().forEach(track => track.stop())
 

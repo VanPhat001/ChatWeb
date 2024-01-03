@@ -30,10 +30,10 @@
             </div>
             <div class="ml-auto flex">
                 <div class="flex items-center ml-2">
-                    <span class="opacity-75">5 bình luận</span>
+                    <span class="opacity-75">{{ post.commentCount }} bình luận</span>
                 </div>
                 <div class="flex items-center ml-2">
-                    <span class="opacity-75">5 chia sẻ</span>
+                    <span class="opacity-75">0 chia sẻ</span>
                 </div>
             </div>
         </div>

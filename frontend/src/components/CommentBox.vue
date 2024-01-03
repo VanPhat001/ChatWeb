@@ -35,7 +35,7 @@ import { useAccountsStore } from '@/stores/accounts';
 import { FlagIcon } from '@heroicons/vue/20/solid';
 import { useAccountStore } from '@/stores/account';
 
-
+const emits = defineEmits(['onCreateNewComment'])
 const props = defineProps({
     authorAccount: {
         type: Object,
@@ -74,8 +74,10 @@ function updateText() {
 }
 
 function postComment() {
-    createComment(text.value)
-    clearInput()
+    if (text.value) {
+        createComment(text.value)
+        clearInput()
+    }
 }
 
 function clearInput() {
@@ -95,6 +97,7 @@ function createComment(text) {
         .then(result => {
             const { comment } = result.data
             comments.value = [comment, ...comments.value]
+            emits('onCreateNewComment')
         })
         .catch(console.log)
 }

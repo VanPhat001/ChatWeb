@@ -31,10 +31,10 @@
                 </div>
                 <div class="ml-auto flex">
                     <div class="flex items-center ml-2">
-                        <span class="opacity-75">5 bình luận</span>
+                        <span class="opacity-75">{{ post.commentCount }} bình luận</span>
                     </div>
                     <div class="flex items-center ml-2">
-                        <span class="opacity-75">5 chia sẻ</span>
+                        <span class="opacity-75">0 chia sẻ</span>
                     </div>
                 </div>
             </div>
@@ -58,7 +58,7 @@
 
             <div class="h-[1px]" style="border-top: 1px solid #3e4042;"></div>
 
-            <CommentBox class="mt-4" :author-account="authorAccount" :post-id="postId"></CommentBox>
+            <CommentBox class="mt-4" @on-create-new-comment="increaseCommentCount" :author-account="authorAccount" :post-id="postId"></CommentBox>
         </div>
     </div>
 </template>
@@ -167,4 +167,7 @@ function likePost() {
     }
 }
 
+function increaseCommentCount() {
+    post.value.commentCount++
+}
 </script>

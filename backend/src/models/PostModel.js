@@ -31,6 +31,10 @@ const schema = new Schema({
     shareFromPost: {
         type: String,
         default: null
+    },
+    commentCount: {
+        type: Number,
+        default: 0
     }
 }, { timestamps: true })
 
