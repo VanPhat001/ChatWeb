@@ -17,6 +17,10 @@ const schema = new Schema({
         type: String,
         default: null
     },
+    isRoom: {
+        type: Boolean,
+        default: false
+    }
 }, { timestamps: true })
 
 module.exports = model('Room', schema)

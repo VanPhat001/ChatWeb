@@ -280,21 +280,19 @@ function onInfoClick() {
 function updateRoomInfo(roomId) {
     const _room = roomsStore.get(roomId)
 
+    if (_room.isRoom) {
+        return
+    }
+
     // room chat contain 2 account
     // or this problem has solved at chatview.vue
-    if (!_room.avatar) {
-        const members = _room.members
-        const partnerId = (members[0] == accountStore._id ? members[1] : members[0])
-        const account = accountsStore.get(partnerId)
-        _room.avatar = account.avatar
-        _room.roomName = account.name
+    const members = _room.members
+    const partnerId = (members[0] == accountStore._id ? members[1] : members[0])
+    const account = accountsStore.get(partnerId)
+    _room.avatar = account.avatar
+    _room.roomName = account.name
 
-        roomsStore.roomMap.set(roomId, _room)
-    }
-    else {
-        // room chat contain at least 2 account
-        // available avatar and room name
-    }
+    roomsStore.roomMap.set(roomId, _room)
 }
 
 </script>

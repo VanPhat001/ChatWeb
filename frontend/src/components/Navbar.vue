@@ -1,5 +1,5 @@
 <template>
-    <div class="navbar flex items-center py-2">
+    <div class="navbar flex items-center py-2 bg-[#242526] border border-transparent border-b-[--border]">
         <div class="w-[280px]"></div>
         <div class="flex mx-auto">
             <router-link :to="{ name: 'home' }" title="home" class="px-3 py-1 rounded-sm hover:bg-gray-700 mx-1">
@@ -10,8 +10,8 @@
                 <Icon icon="dashicons:format-chat" height="28"></Icon>
             </router-link>
 
-            <router-link :to="{ name: 'home' }" title="friends" class="px-3 py-1 rounded-sm hover:bg-gray-700 mx-1">
-                <Icon icon="pepicons-pop:people" height="28"></Icon>
+            <router-link :to="{ name: 'friends' }" title="friends" class="px-3 py-1 rounded-sm hover:bg-gray-700 mx-1">
+                <Icon icon="bi:people-fill" height="28"></Icon>
             </router-link>
 
             <!-- <router-link :to="{ name: 'login' }" title="log out" class="px-3 py-1 rounded-sm hover:bg-gray-700 mx-1">

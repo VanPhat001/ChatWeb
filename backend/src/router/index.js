@@ -10,6 +10,7 @@ router.use('/room', require('./roomRouter'))
 router.use('/message', require('./messageRouter'))
 router.use('/post', require('./postRouter'))
 router.use('/comment', require('./commentRouter'))
+router.use('/friend', require('./friendRouter'))
 
 router.post('/login', async (req, res, next) => {
     const { username, password } = req.body

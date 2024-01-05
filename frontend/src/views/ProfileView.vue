@@ -16,8 +16,8 @@
                         <div class="flex flex-col justify-center ml-2">
                             <p class="text-2xl">{{ account.name }}</p>
                             <p class="opacity-70">
-                                <span>{{ "3 bạn bè" }}</span> •
-                                <span>{{ "5 đang theo dõi" }}</span>
+                                <span>{{ "0 bạn bè" }}</span> •
+                                <span>{{ "0 đang theo dõi" }}</span>
                             </p>
                         </div>
 

@@ -1,6 +1,8 @@
 <template>
     <div class="post-view flex flex-col-reverse overflow-y-auto justify-start h-full w-full">
         <div class="m-auto mt-2 bg-[#242526] w-[660px] max-w-[60%] rounded-lg p-2" v-if="authorAccount && post">
+            <ImageModal v-if="isShowImageModal" class="z-10" :src="imageModalSource" @on-close="onCloseImageModal"></ImageModal>
+
             <!-- post header -->
             <div class="flex items-center">
                 <Avatar :src="authorAccount.avatar" :account-id="authorAccount._id"></Avatar>
@@ -21,7 +23,7 @@
 
             <!-- image box -->
             <div class="max-h-[360px] flex justify-center items-center overflow-hidden my-1.5" v-if="post.image.url">
-                <img @click="openImage" class="h-full w-full" :src="post.image.url" alt="image">
+                <img @click="openImage(post.image.url)" class="h-full w-full" :src="post.image.url" alt="image">
             </div>
 
             <!-- react -->
@@ -58,7 +60,7 @@
 
             <div class="h-[1px]" style="border-top: 1px solid #3e4042;"></div>
 
-            <CommentBox class="mt-4" @on-create-new-comment="increaseCommentCount" :author-account="authorAccount" :post-id="postId"></CommentBox>
+            <CommentBox class="mt-4" @on-create-new-comment="increaseCommentCount" :author-account="authorAccount" :post="post" :post-id="postId"></CommentBox>
         </div>
     </div>
 </template>
@@ -73,6 +75,7 @@ import { useAccountStore } from '@/stores/account'
 import { useRoute } from 'vue-router'
 import Avatar from '@/components/Avatar.vue'
 import CommentBox from '@/components/CommentBox.vue'
+import ImageModal from '@/components/ImageModal.vue'
 
 
 
@@ -92,6 +95,8 @@ const showMoreButtonEl = ref(null)
 const authorAccount = ref(null)
 const countTimeActive = ref('')
 const userLikePost = ref(false)
+const imageModalSource = ref('')
+const isShowImageModal = ref(false)
 
 
 
@@ -115,9 +120,9 @@ onBeforeUnmount(() => {
 })
 
 
-function openImage() {
-    const imageSrc = post.value.image.url
-    // showImageModal(imageSrc)
+function openImage(imgSource) {
+    isShowImageModal.value = true
+    imageModalSource.value = imgSource
 }
 
 function clockTick() {
@@ -169,5 +174,9 @@ function likePost() {
 
 function increaseCommentCount() {
     post.value.commentCount++
+}
+
+function onCloseImageModal() {
+    isShowImageModal.value = false
 }
 </script>

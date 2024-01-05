@@ -36,7 +36,7 @@
                             <p>{{ room.roomName }}</p>
                             <div class="text-[80%] flex opacity-60" :class="{ '!opacity-100': !room.seen }">
                                 <p class="line-clamp-1">{{ room.latestMessage?.text }}</p>
-                                <p class="ml-auto whitespace-nowrap">3 giờ</p>
+                                <p class="ml-auto whitespace-nowrap">{{ getDifferenceBetween2Date(new Date(), new Date(room.latestMessage?.createdAt)) }}</p>
                             </div>
                         </div>
                     </div>
@@ -50,8 +50,13 @@
 
         <!-- user info -->
         <div ref="infoEl" class="sidebar w-[260px] border border-[--border] transition-all overflow-y-auto close"
-            :set="roomInfo = getRoomInfo()">
-            <p class="p-2 break-words" v-for="(item, index) in roomInfo" :key="index">{{ index }} : {{ item }}</p>
+            v-if="currentRoomId" :set="accountInfo = getRoomInfo()">
+            <Avatar class="m-auto mt-4" :size="96" :src="accountInfo.avatar"></Avatar>
+            <p class="text-center text-2xl mt-2">{{ accountInfo.name }}</p>
+            
+            <p>Id: {{ accountInfo._id }}</p>
+            <p>Username: {{ accountInfo.username }}</p>
+            <p>Gender: {{ accountInfo.gender }}</p>
         </div>
     </div>
 </template>
@@ -75,6 +80,7 @@ import { useSocketStore } from '@/stores/socket'
 import { Icon } from '@iconify/vue'
 import { computed, inject, onBeforeUnmount, ref, watch } from 'vue'
 import Debounce from '../helpers/Debounce'
+import { getDifferenceBetween2Date } from '@/helpers'
 
 
 const accountStore = useAccountStore()
@@ -140,11 +146,7 @@ axiosConfig().get('/roomContainer')
         _accounts = _accounts.concat(await fetchAccounts([..._accountIdSet]))
 
         _rooms.forEach((room, index) => {
-            if (room.roomName) {
-                return
-            }
-
-            if (room.avatar) {
+            if (room.isRoom) {
                 return
             }
 
