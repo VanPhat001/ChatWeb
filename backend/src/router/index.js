@@ -11,6 +11,7 @@ router.use('/message', require('./messageRouter'))
 router.use('/post', require('./postRouter'))
 router.use('/comment', require('./commentRouter'))
 router.use('/friend', require('./friendRouter'))
+router.use('/requestAddFriend', require('./requestAddFriendRouter'))
 
 router.post('/login', async (req, res, next) => {
     const { username, password } = req.body

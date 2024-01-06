@@ -28,7 +28,7 @@ router.post('/', async (req, res, next) => {
                 $push: {
                     friends: accountId2
                 }
-            })  
+            })
         }
 
         const task1 = updateFriendContainer(accountId1, accountId2)
@@ -37,6 +37,37 @@ router.post('/', async (req, res, next) => {
         await Promise.all([task1, task2])
 
         res.send({ status: 'success', friend: friendDoc })
+    } catch (error) {
+        next(error)
+    }
+})
+
+router.delete('/:id', async (req, res, next) => {
+    const { id } = req.params
+
+    try {
+        const friendDoc = await friendService.Friend.findByIdAndDelete(id)
+        const accountId1 = friendDoc.value.accountId1
+        const accountId2 = friendDoc.value.accountId2
+
+        async function updateFriendContainer(accountId, friendId) {
+            const accountDoc = await accountService.getOne({ _id: accountId })
+            return await friendContainerService.FriendContainer.updateOne({
+                _id: accountDoc.friendContainerId
+            }, {
+                $pull: {
+                    friends: friendId
+                }
+            })
+        }
+
+        const task1 = friendService.delete({ _id: id })
+        const task2 = updateFriendContainer(accountId1, id)
+        const task3 = updateFriendContainer(accountId2, id)
+
+        await Promise.all([task1, task2, task3])
+
+        res.send({ status: 'success' })
     } catch (error) {
         next(error)
     }
@@ -57,9 +88,9 @@ router.get('/:id', async (req, res, next) => {
 // tìm friend dựa trên friend.accountId1 == id || friend.accountId2 == id
 router.get('/account/:id', async (req, res, next) => {
     const { id: accountId } = req.params
-    let {limit, skip} = req.query
-    
-    limit = limit ? limit : 15  
+    let { limit, skip } = req.query
+
+    limit = limit ? limit : 15
     skip = skip ? skip : 0
 
     try {
@@ -94,6 +125,38 @@ router.get('/:id1/:id2', async (req, res, next) => {
         next(error)
     }
 })
+
+// gợi ý bạn bè cho account._id == id
+router.get('/account/:id/suggest', async (req, res, next) => {
+    const { id } = req.params
+
+    try {
+        const friendDocs = await friendService.Friend.find({})
+            .or([{ accountId1: id }, { accountId2: id }])
+
+        const friendIds = friendDocs.map(doc => {
+            const { accountId1, accountId2 } = doc
+            return accountId1 == id ? accountId2 : accountId1
+        })
+
+        const suggestDocs = await friendService.Friend.find({})
+            .or([{
+                accountId1: { $ne: id },
+                accountId2: { $in: friendIds }
+            }, {
+                accountId2: { $ne: id },
+                accountId1: { $in: friendIds }
+            }])
+
+        const friendIdSet = new Set(friendIds)
+        const suggests = suggestDocs.map(({ accountId1, accountId2 }) => friendIdSet.has(accountId1) ? accountId2 : accountId1)
+
+        res.send({ status: 'success', suggests })
+    } catch (error) {
+        next(error)
+    }
+})
+
 
 
 module.exports = router

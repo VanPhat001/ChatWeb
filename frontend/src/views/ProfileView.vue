@@ -4,7 +4,7 @@
         <template v-if="account">
         <div class="bg-transparent pb-2 relative overflow-hidden">
                 <img :src="account.background"
-                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 blur-[100px] h-full w-[300%]"
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 blur-[24px] h-full w-[300%]"
                     alt="">
                 <div class="w-[80%] m-auto">
                     <img :src="account.background" class="block m-auto rounded-lg w-full h-[500px]" alt="">

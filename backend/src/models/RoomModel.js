@@ -7,7 +7,7 @@ const schema = new Schema({
     },
     members: {
         type: [String],
-        require: true
+        required: true
     },
     avatar: {
         type: String,

@@ -19,7 +19,7 @@
                     <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquid placeat, earum porro voluptates eveniet accusamus, labore laborum asperiores corrupti esse officiis dolor voluptate totam! Explicabo nesciunt at obcaecati veniam dignissimos. {{ cmt.text }}</p>
                 </div>
                 <span class="ml-2 italic text-[84%] opacity-80 hover:text-blue-500 cursor-pointer">Phản hồi</span>
-                • <span class="italic text-[84%] opacity-80">{{ calcTimeActive(cmt.createdAt) }}</span>
+                <span class="italic text-[66%] opacity-80"> • {{ calcTimeActive(cmt.createdAt) }}</span>
             </div>
             
         </div>

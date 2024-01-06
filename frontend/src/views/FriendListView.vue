@@ -34,9 +34,9 @@ axiosConfig().get(`/friend/account/${accountStore._id}`)
         const accounts = await fetchAccounts(_friendIds)
         accountsStore.addMany(accounts)
 
-        for (let i = 0; i < 20; i++) {
-            _friendIds.push(_friendIds[0])
-        }
+        // for (let i = 0; i < 20; i++) {
+        //     _friendIds.push(_friendIds[0])
+        // }
 
         friendIds.value = _friendIds
     })
