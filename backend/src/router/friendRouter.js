@@ -3,6 +3,7 @@ const router = require('express').Router()
 const friendService = require('../services/friendService')
 const friendContainerService = require('../services/friendContainerService')
 const accountService = require('../services/accountService')
+const requestAddFriendService = require('../services/requestAddFriendService')
 
 // tạo friend và cập nhật friendContainer
 router.post('/', async (req, res, next) => {
@@ -150,6 +151,30 @@ router.get('/account/:id/suggest', async (req, res, next) => {
 
         const friendIdSet = new Set(friendIds)
         const suggests = suggestDocs.map(({ accountId1, accountId2 }) => friendIdSet.has(accountId1) ? accountId2 : accountId1)
+
+        const deleteAtIndex = []
+        for (let i = 0; i < suggests.length; i++) {
+            const accountId = suggests[i]
+
+            const task1 = requestAddFriendService.getOne({
+                accountFrom: accountId,
+                accountTo: id
+            })
+
+            const task2 = requestAddFriendService.getOne({
+                accountFrom: id,
+                accountTo: accountId
+            })
+
+            const [doc1, doc2] = await Promise.all([task1, task2])
+            if (doc1 !== null || doc2 !== null) {
+                deleteAtIndex.push(i)
+            }
+        }
+
+        for (let i = deleteAtIndex.length - 1; i >= 0; i--) {
+            suggests.splice(deleteAtIndex[i], 1)
+        }
 
         res.send({ status: 'success', suggests })
     } catch (error) {

@@ -21,8 +21,20 @@
       </div>
     </div>
 
-    <main class="flex-1">
+    <main class="flex-1 overflow-y-auto">
       <router-view></router-view>
+
+      <template v-if="routeName == links[0].name">
+        <div class="mt-4">
+          <p class="px-7 font-semibold text-xl text-white/80">Lời mời kết bạn</p>
+          <FriendRequestView></FriendRequestView>
+        </div>
+        <hr class="border-gray-500/40 mb-6">
+        <div>
+          <p class="px-7 font-semibold text-xl text-white/80">Những người bạn có thể biết</p>
+          <FriendSuggestView></FriendSuggestView>
+        </div>
+      </template>
     </main>
   </div>
 </template>
@@ -31,6 +43,9 @@
 import { Icon } from '@iconify/vue';
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
+import FriendRequestView from './FriendRequestView.vue';
+import FriendSuggestView from './FriendSuggestView.vue';
+
 
 const route = useRoute()
 const routeName = computed(() => route.name)
@@ -44,7 +59,7 @@ const links = [
   {
     text: 'Lời mời kết bạn',
     icon: 'ion:person-add',
-    name: 'home'
+    name: 'friend-request'
   },
   {
     text: 'Gợi ý',

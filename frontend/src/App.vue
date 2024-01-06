@@ -23,7 +23,6 @@ import { useAccountStore } from '@/stores/account'
 import { useSocketStore } from './stores/socket'
 import Loading from '@/components/Loading.vue'
 import MediaCall from '@/peer/MediaCall'
-import { playIncommingCall } from './sounds'
 import IncommingCall from './components/IncommingCall.vue'
 import { useAccountsStore } from './stores/accounts'
 
