@@ -1,5 +1,5 @@
 <template>
-    <div class="image-modal fixed inset-0">
+    <div class="image-modal fixed inset-0 z-10">
         <div @click="emits('onClose')" class="bg-black w-full h-full opacity-80"></div>
         <button @click="emits('onClose')" class="absolute top-8 left-8 -translate-x-1/2 -translate-y-1/2 p-1.5 hover:bg-gray-700 rounded-full">
             <Icon class="text-white" height="26" icon="ic:round-close"></Icon>

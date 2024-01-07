@@ -39,7 +39,7 @@
             </div>
 
             <button @click="createPost" class="bg-[#505151] w-full py-1.5 rounded-lg text-[#858586]"
-                :class="{ 'bg-blue-500 text-white': text.length > 0 }" :disabled="text.length == 0">Đăng</button>
+                :class="{ 'bg-blue-500 text-white': visiblePostButton }" :disabled="!visiblePostButton">Đăng</button>
         </div>
     </div>
 </template>
@@ -66,6 +66,8 @@ const text = ref('')
 const publicId = ref('')
 const imageUrl = ref('')
 const inputEl = ref(null)
+
+const visiblePostButton = computed(() => text.value.length > 0 || imageUrl.value.length > 0)
 
 function createPost() {
     const image = imageUrl.value

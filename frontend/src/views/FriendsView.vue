@@ -57,6 +57,11 @@ const links = [
     name: 'friends',
   },
   {
+    text: 'Tìm kiếm',
+    icon: 'mdi:user-search',
+    name: 'friend-search'
+  },
+  {
     text: 'Lời mời kết bạn',
     icon: 'ion:person-add',
     name: 'friend-request'
@@ -70,7 +75,7 @@ const links = [
     text: 'Tất cả bạn bè',
     icon: 'fluent:text-bullet-list-square-person-32-filled',
     name: 'friend-list'
-  }
+  },
 ]
 
 

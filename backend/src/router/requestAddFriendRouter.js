@@ -70,7 +70,6 @@ router.delete('/:from/:to/accept', async (req, res, next) => {
     const { from: accountFrom, to: accountTo } = req.params
 
     try {
-
         const requestAddFriendDoc = await requestAddFriendService.RequestAddFriend.findOneAndDelete({
             accountFrom,
             accountTo
@@ -103,10 +102,37 @@ router.delete('/:from/:to/accept', async (req, res, next) => {
     }
 })
 
-router.delete('/:from/:to/cancel', (req, res, next) => {
+router.delete('/:from/:to/cancel', async (req, res, next) => {
     const { from: accountFrom, to: accountTo } = req.params
-    try {
 
+    try {
+        const requestAddFriendDoc = await requestAddFriendService.RequestAddFriend.findOneAndDelete({
+            accountFrom,
+            accountTo
+        })
+
+        async function updateRequestAddFriendContainer(accountId, value) {
+            const accountDoc = await accountService.getOne({ _id: accountId })
+            return await requestAddFriendContainerService.RequestAddFriendContainer.updateOne({
+                _id: accountDoc.requestAddFriendContainerId
+            }, {
+                $pull: {
+                    requestAddFriend: value
+                }
+            })
+        }
+
+        const task1 = updateRequestAddFriendContainer(accountFrom, requestAddFriendDoc._id)
+        const task2 = updateRequestAddFriendContainer(accountTo, requestAddFriendDoc._id)
+
+        await Promise.all([task1, task2])
+
+        // const result = await axios.post(`http://localhost:${process.env.PORT}/api/friend`, {
+        //     accountId1: accountFrom,
+        //     accountId2: accountTo
+        // })
+
+        res.send({ status: 'success' })
     } catch (error) {
         next(error)
     }

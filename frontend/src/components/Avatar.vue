@@ -1,5 +1,6 @@
 <template>
-    <div class="avatar relative" :style="{ 'width': size + 'px', 'height': size + 'px' }" @click="redirectToProfileView">
+    <div class="avatar relative" :class="{ 'cursor-pointer': accountId !== null }"
+        :style="{ 'width': size + 'px', 'height': size + 'px' }" @click="redirectToProfileView">
         <img :src="src" alt="avatar" class="w-full h-full rounded-full">
         <div class="w-4 h-4 border-[2px] border-[--background] bg-green-600 rounded-full absolute"
             :style="{ 'bottom': bottomPercent + '%', 'right': rightPercent + '%' }" v-show="active"></div>

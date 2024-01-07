@@ -182,6 +182,48 @@ router.get('/account/:id/suggest', async (req, res, next) => {
     }
 })
 
+router.get('/:id1/:id2/relationship', async (req, res, next) => {
+    const { id1, id2 } = req.params
+
+    try {
+        const _id1 = id1 < id2 ? id1 : id2
+        const _id2 = _id1 == id1 ? id2 : id1
+        const task1 = friendService.getOne({
+            accountId1: _id1,
+            accountId2: _id2
+        })
+
+        const task2 = requestAddFriendService.getOne({
+            accountFrom: id1,
+            accountTo: id2
+        })
+
+        const task3 = requestAddFriendService.getOne({
+            accountFrom: id2,
+            accountTo: id1
+        })
+
+        const [friendDoc, RAFDoc1, RAFDoc2] = await Promise.all([task1, task2, task3])
+
+        let relationship = ''
+        if (friendDoc) {
+            relationship = 'friend'
+        } else if (RAFDoc1) {
+            // id1 send request to id2
+            relationship = 'send'
+        } else if (RAFDoc2) {
+            // id2 send request to id1
+            relationship = 'receive'
+        } else {
+            relationship = 'none'
+        }
+
+        res.send({ status: 'success', relationship })
+
+    } catch (error) {
+        next(error)
+    }
+})
 
 
 module.exports = router

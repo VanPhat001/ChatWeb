@@ -1,6 +1,6 @@
 const router = require('express').Router()
 
-const { removePasswordProp, authenToken, convertDocsToArrayObject } = require('../helpers')
+const { removePasswordProp, authenToken, convertDocsToArrayObject, removeNullProps } = require('../helpers')
 const accountService = require('../services/accountService')
 const friendContainerService = require('../services/friendContainerService')
 const postContainerService = require('../services/postContainerService')
@@ -61,6 +61,20 @@ router.post('/list', async (req, res, next) => {
         const accountDocs = await Promise.all(tasks)
 
         res.send({ status: 'success', accounts: accountDocs })
+    } catch (error) {
+        next(error)
+    }
+})
+
+router.patch('/:id', async (req, res, next) => {
+    const { id } = req.params
+    const payload = req.body
+
+    removeNullProps(payload)
+
+    try {
+        const accountDoc = await accountService.Account.findOneAndUpdate({ _id: id}, payload, { new: true })
+        res.send({ status: 'success', account: accountDoc })
     } catch (error) {
         next(error)
     }

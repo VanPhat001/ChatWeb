@@ -8,10 +8,10 @@
       <h2 class="text-xl font-semibold mb-2">{{ account.name }}</h2>
       <!-- <p class="text-gray-600 mb-4">{{ 'card.content' }}</p> -->
 
-      <button @click.prevent="emits('onSubmit')" class="bg-blue-500 w-full text-white py-1.5 rounded-md hover:bg-blue-600">{{
+      <button v-if="submitText" @click.prevent="emits('onSubmit')" class="bg-blue-500 w-full text-white py-1.5 rounded-md hover:bg-blue-600">{{
         submitText }}</button>
 
-      <button @click.prevent="emits('onCancel')" class="bg-[#3a3b3c] w-full text-white py-1.5 mt-1.5 rounded-md hover:bg-[#3a3b3c]/70">{{
+      <button v-if="cancelText" @click.prevent="emits('onCancel')" class="bg-[#3a3b3c] w-full text-white py-1.5 mt-1.5 rounded-md hover:bg-[#3a3b3c]/70">{{
         cancelText
       }}</button>
     </div>

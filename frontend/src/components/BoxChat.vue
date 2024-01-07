@@ -12,7 +12,7 @@
                 <!-- info -->
                 <div class="flex">
                     <!-- <img :src="roomAvatar" alt="avatar" class="w-[40px] h-[40px] rounded-full inline-block"> -->
-                    <Avatar :size="40" :src="room.avatar" :active="false" :bottom-percent="-4" :right-percent="-4">
+                    <Avatar :size="40" :src="room.avatar" :active="false" :bottom-percent="-4" :right-percent="-4" :account-id="room.isRoom ? null : getFirstAnotherMemberId()">
                     </Avatar>
 
                     <div class="px-2">
@@ -293,6 +293,13 @@ function updateRoomInfo(roomId) {
     _room.roomName = account.name
 
     roomsStore.roomMap.set(roomId, _room)
+}
+
+function getFirstAnotherMemberId() {
+    const _room = roomsStore.get(roomId.value)
+    const members = _room.members
+    const partnerId = (members[0] == accountStore._id ? members[1] : members[0])
+    return partnerId
 }
 
 </script>

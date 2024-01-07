@@ -1,6 +1,7 @@
 <template>
     <div class="post-list flex flex-col-reverse" :class="{ 'overflow-y-auto h-full w-full': allowScrollbar }">
-        <Post class="m-auto w-[660px]" v-for="(item, index) in posts" :key="index" :post="item"></Post>
+        <div class="flex-1"></div>
+        <Post class="mx-auto w-[660px]" v-for="(item, index) in posts" :key="index" :post="item"></Post>
     </div>
 </template>
 
