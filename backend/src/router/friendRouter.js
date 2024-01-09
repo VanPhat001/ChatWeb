@@ -4,6 +4,24 @@ const friendService = require('../services/friendService')
 const friendContainerService = require('../services/friendContainerService')
 const accountService = require('../services/accountService')
 const requestAddFriendService = require('../services/requestAddFriendService')
+const { default: axios } = require('axios')
+
+router.post('/RESET', async (req, res, next) => {
+    try {
+        const task1 = friendService.Friend.deleteMany({})
+        const task2 = friendContainerService.FriendContainer.updateMany({}, {
+            $set: {
+                friends: []
+            }
+        })
+
+        await Promise.all([task1, task2])
+
+        res.send({ status: 'success' })
+    } catch (error) {
+        console.log(error)
+    }
+})
 
 // tạo friend và cập nhật friendContainer
 router.post('/', async (req, res, next) => {
@@ -32,8 +50,8 @@ router.post('/', async (req, res, next) => {
             })
         }
 
-        const task1 = updateFriendContainer(accountId1, accountId2)
-        const task2 = updateFriendContainer(accountId2, accountId1)
+        const task1 = updateFriendContainer(accountId1, friendDoc._id)
+        const task2 = updateFriendContainer(accountId2, friendDoc._id)
 
         await Promise.all([task1, task2])
 
@@ -99,7 +117,60 @@ router.get('/account/:id', async (req, res, next) => {
         const friendContainerDoc = await friendContainerService.getOne({ _id: accountDoc.friendContainerId })
         const friendIds = friendContainerDoc.friends.slice(skip, skip + limit)
 
-        res.send({ status: 'success', friendIds })
+        const tasks = []
+        friendIds.forEach(friendCollectionId => {
+            console.log(friendCollectionId)
+            tasks.push(friendService.getOne({ _id: friendCollectionId }))
+        })
+        const friendDocs = await Promise.all(tasks)
+
+        console.log({ friendDocs })
+        const arr = friendDocs.map(({ accountId1, accountId2 }) => accountId1 == accountId ? accountId2 : accountId1)
+
+        res.send({ status: 'success', friendIds: arr })
+    } catch (error) {
+        next(error)
+    }
+})
+
+router.delete('/:id1/:id2', async (req, res, next) => {
+    let { id1, id2 } = req.params
+
+    if (id1 > id2) {
+        let temp = id1
+        id1 = id2
+        id2 = temp
+    }
+
+    try {
+        const friendDoc = await friendService.Friend.findOneAndDelete({
+            accountId1: id1,
+            accountId2: id2
+        })
+
+        async function updateFriendContainer(accountId, friendId) {
+            const accountDoc = await accountService.getOne({ _id: accountId })
+            return await friendContainerService.FriendContainer.updateOne({
+                _id: accountDoc.friendContainerId
+            }, {
+                $pull: {
+                    friends: friendId
+                }
+            })
+        }
+
+        console.log({ friendDoc })
+        const id = friendDoc._id
+        const accountId1 = friendDoc.accountId1
+        const accountId2 = friendDoc.accountId2
+
+        const task1 = friendService.delete({ _id: id })
+        const task2 = updateFriendContainer(accountId1, id)
+        const task3 = updateFriendContainer(accountId2, id)
+
+        await Promise.all([task1, task2, task3])
+
+        res.send({ status: 'success' })
     } catch (error) {
         next(error)
     }

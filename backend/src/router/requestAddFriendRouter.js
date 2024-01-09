@@ -6,6 +6,7 @@ const requestAddFriendContainerService = require('../services/requestAddFriendCo
 const requestAddFriendService = require('../services/requestAddFriendService')
 
 router.post('/RESET', async (req, res, next) => {
+    console.log(`friend: router.post('/RESET')`)
     try {
         const task1 = requestAddFriendContainerService.RequestAddFriendContainer.updateMany({}, {
             $set: {
@@ -25,6 +26,7 @@ router.post('/RESET', async (req, res, next) => {
 
 // tạo mới requestAddFriend và cập nhật requestAddFriendContainer
 router.post('/', async (req, res, next) => {
+    console.log(`friend: router.post('/')`)
     const { accountFrom, accountTo } = req.body
 
     try {
@@ -56,17 +58,37 @@ router.post('/', async (req, res, next) => {
 })
 
 // xoá requestAddFriend có _id tương ứng và đồng thời cập nhật lại requestAddFriendContainer
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', async (req, res, next) => {
+    console.log(`friend: router.delete('/:id')`)
     const { id } = req.params
 
     try {
+        const doc = await requestAddFriendService.RequestAddFriend.findOneAndDelete({ _id: id })
 
+        async function updateRequestAddFriendContainer(accountId, value) {
+            const accountDoc = await accountService.getOne({ _id: accountId })
+            return await requestAddFriendContainerService.RequestAddFriendContainer.updateOne({
+                _id: accountDoc.requestAddFriendContainerId
+            }, {
+                $pull: {
+                    requestAddFriend: value
+                }
+            })
+        }
+
+        const task1 = updateRequestAddFriendContainer(doc.accountFrom, id)
+        const task2 = updateRequestAddFriendContainer(doc.accountTo, id)
+
+        await Promise.all([task1, task2])
+
+        res.send({ status: 'success' })
     } catch (error) {
         next(error)
     }
 })
 
 router.delete('/:from/:to/accept', async (req, res, next) => {
+    console.log(`friend: router.delete('/:from/:to/accept')`)
     const { from: accountFrom, to: accountTo } = req.params
 
     try {
@@ -96,6 +118,8 @@ router.delete('/:from/:to/accept', async (req, res, next) => {
             accountId2: accountTo
         })
 
+        console.log('result', result.data)
+
         res.send({ status: 'success', data: result.data })
     } catch (error) {
         next(error)
@@ -103,6 +127,7 @@ router.delete('/:from/:to/accept', async (req, res, next) => {
 })
 
 router.delete('/:from/:to/cancel', async (req, res, next) => {
+    console.log(`friend: router.delete('/:from/:to/cancel')`)
     const { from: accountFrom, to: accountTo } = req.params
 
     try {
@@ -140,6 +165,7 @@ router.delete('/:from/:to/cancel', async (req, res, next) => {
 
 // tìm kiếm requestAddFriend có _id tương ứng
 router.get('/:id', async (req, res, next) => {
+    console.log(`friend: router.get('/:id')`)
     const { id } = req.params
 
     try {
@@ -152,6 +178,7 @@ router.get('/:id', async (req, res, next) => {
 
 // tìm kiếm những account gửi lời mời kết bạn đến account._id == accountId
 router.get('/to/:accountId', async (req, res, next) => {
+    console.log(`friend: router.get('/to/:accountId')`)
     const { accountId } = req.params
 
     try {
@@ -177,6 +204,7 @@ router.get('/to/:accountId', async (req, res, next) => {
 
 // tìm kiếm requestAddFriend có accountFrom == from và accountTo == to
 router.get('/:from/:to', async (req, res, next) => {
+    console.log(`friend: router.get('/:from/:to')`)
     const { from: accountFrom, to: accountTo } = req.params
 
     try {

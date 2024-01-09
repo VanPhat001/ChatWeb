@@ -53,26 +53,26 @@
                         -->
                         <div class="ml-auto flex items-center">
                             <template v-if="relationship == 'personal'">
-                                <button class="bg-blue-500 text-gray-200 px-6 py-1 rounded-md">Chỉnh sửa hồ sơ</button>
-                                <!-- <button class="ml-1 bg-blue-500 text-gray-200 px-6 py-1 rounded-md">cái nút</button> -->
+                                <button class="bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Chỉnh sửa hồ sơ</button>
+                                <!-- <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">cái nút</button> -->
                             </template>
                             <template v-else-if="relationship == 'friend'">
-                                <button class="bg-blue-500 text-gray-200 px-6 py-1 rounded-md">Huỷ kết bạn</button>
-                                <button class="ml-1 bg-blue-500 text-gray-200 px-6 py-1 rounded-md">Nhắn tin</button>
+                                <button class="bg-gray-600 hover:bg-gray-700 text-gray-200 px-6 py-1 rounded-md">Huỷ kết bạn</button>
+                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Nhắn tin</button>
                             </template>
                             <template v-else-if="relationship == 'none'">
-                                <button class="bg-blue-500 text-gray-200 px-6 py-1 rounded-md"
+                                <button class="bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md"
                                     @click="sendRequestAddFriend">Thêm bạn bè</button>
-                                <button class="ml-1 bg-blue-500 text-gray-200 px-6 py-1 rounded-md">Nhắn tin</button>
+                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Nhắn tin</button>
                             </template>
                             <template v-else-if="relationship == 'send'">
-                                <button class="bg-blue-500 text-gray-200 px-6 py-1 rounded-md" @click="cancelRequestAddFriend">Huỷ lời mời</button>
-                                <button class="ml-1 bg-blue-500 text-gray-200 px-6 py-1 rounded-md">Nhắn tin</button>
+                                <button class="bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md" @click="cancelRequestAddFriend">Huỷ lời mời</button>
+                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Nhắn tin</button>
                             </template>
                             <template v-else-if="relationship == 'receive'">
-                                <button class="bg-blue-500 text-gray-200 px-6 py-1 rounded-md"
+                                <button class="bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md"
                                     @click="acceptRequestAddFriend">Đồng ý</button>
-                                <button class="ml-1 bg-blue-500 text-gray-200 px-6 py-1 rounded-md">Nhắn tin</button>
+                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Nhắn tin</button>
                             </template>
                         </div>
                     </div>

@@ -16,7 +16,8 @@
             <Avatar :size="44" :src="getAvatar(cmt.accountId)"></Avatar>
             <div class="flex-1 pl-1.5">
                 <div class="bg-[#3a3b3c] rounded-lg px-2 py-1 w-fit">
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquid placeat, earum porro voluptates eveniet accusamus, labore laborum asperiores corrupti esse officiis dolor voluptate totam! Explicabo nesciunt at obcaecati veniam dignissimos. {{ cmt.text }}</p>
+                    <p class="text-[104%] text-white">{{ getName(cmt.accountId) }}</p>
+                    <p class="text-[90%] opacity-85">Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquid placeat, earum porro voluptates eveniet accusamus, labore laborum asperiores corrupti esse officiis dolor voluptate totam! Explicabo nesciunt at obcaecati veniam dignissimos. {{ cmt.text }}</p>
                 </div>
                 <span class="ml-2 italic text-[84%] opacity-80 hover:text-blue-500 cursor-pointer">Phản hồi</span>
                 <span class="italic text-[66%] opacity-80"> • {{ calcTimeActive(cmt.createdAt) }}</span>
@@ -134,6 +135,10 @@ function calcTimeActive(dateTimeString) {
 
 function getAvatar(accountId) {
     return accountsStore.get(accountId)?.avatar
+}
+
+function getName(accountId) {
+    return accountsStore.get(accountId)?.name
 }
 
 function continueFetchComments() {

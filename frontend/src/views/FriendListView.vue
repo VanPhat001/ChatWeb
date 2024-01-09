@@ -2,8 +2,7 @@
     <div class="friend-list w-full h-full overflow-y-auto p-4">
 
         <template v-for="(friendId, index) in friendIds" :key="index">
-            <FriendCard :friend-id="friendId" :account="accountsStore.get(friendId)" :submit-text="'Xác nhận'"
-                :cancel-text="'Xoá'"></FriendCard>
+            <FriendCard :friend-id="friendId" :account="accountsStore.get(friendId)" :cancel-text="'Xoá kết bạn'" :submit-text="''" @on-cancel="deleteFriendRequest(index)"></FriendCard>
         </template>
     </div>
 </template>
@@ -41,5 +40,20 @@ async function fetchAccounts(accountIdArray) {
         accountIdArray
     })
     return result.data.accounts
+}
+
+function deleteFriendRequest(accountIndex) {
+    const accountId = friendIds.value[accountIndex]
+    // console.log({
+    //     accountId1: accountStore._id,
+    //     accountId2: accountId
+    // })
+    console.log(`${accountStore._id} / ${accountId}`)
+
+    axiosConfig().delete(`/friend/${accountStore._id}/${accountId}`)
+    .then(result => {
+        friendIds.value.splice(accountIndex, 1)
+    })
+    .catch(console.log)
 }
 </script>
