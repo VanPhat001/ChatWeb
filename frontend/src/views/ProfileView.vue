@@ -10,7 +10,8 @@
 
                 <div class="w-[80%] m-auto">
                     <div class="group/background relative m-auto rounded-lg overflow-hidden">
-                        <img @click="showImageModal(account.background)" :src="account.background" class="block m-auto w-full h-[500px]" alt="">
+                        <img @click="showImageModal(account.background)" :src="account.background"
+                            class="block m-auto w-full h-[500px]" alt="">
                         <!-- change background button -->
                         <button v-if="accountId == accountStore._id"
                             class="group-hover/background:visible invisible absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-full flex bg-black/70"
@@ -22,7 +23,8 @@
 
                     <div class="px-8 flex h-[calc(152px*2/3+12px)]">
                         <div class="group/avatar -translate-y-1/3 relative ">
-                            <Avatar @click="showImageModal(account.avatar)" class="rounded-full border-4 border-[#3d3a3a]" :src="account.avatar" :size="152">
+                            <Avatar @click="showImageModal(account.avatar)" class="rounded-full border-4 border-[#3d3a3a]"
+                                :src="account.avatar" :size="152">
                             </Avatar>
                             <!-- change avatar button -->
                             <button v-if="accountId == accountStore._id"
@@ -53,26 +55,34 @@
                         -->
                         <div class="ml-auto flex items-center">
                             <template v-if="relationship == 'personal'">
-                                <button class="bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Chỉnh sửa hồ sơ</button>
+                                <button class="bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md"
+                                    @click="isDisplayProfileEdit = true">Chỉnh sửa hồ sơ</button>
                                 <!-- <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">cái nút</button> -->
                             </template>
                             <template v-else-if="relationship == 'friend'">
-                                <button class="bg-gray-600 hover:bg-gray-700 text-gray-200 px-6 py-1 rounded-md">Huỷ kết bạn</button>
-                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Nhắn tin</button>
+                                <button class="bg-gray-600 hover:bg-gray-700 text-gray-200 px-6 py-1 rounded-md"
+                                    @click="deleteFriendRequest">Huỷ kết
+                                    bạn</button>
+                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Nhắn
+                                    tin</button>
                             </template>
                             <template v-else-if="relationship == 'none'">
                                 <button class="bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md"
                                     @click="sendRequestAddFriend">Thêm bạn bè</button>
-                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Nhắn tin</button>
+                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Nhắn
+                                    tin</button>
                             </template>
                             <template v-else-if="relationship == 'send'">
-                                <button class="bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md" @click="cancelRequestAddFriend">Huỷ lời mời</button>
-                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Nhắn tin</button>
+                                <button class="bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md"
+                                    @click="cancelRequestAddFriend">Huỷ lời mời</button>
+                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Nhắn
+                                    tin</button>
                             </template>
                             <template v-else-if="relationship == 'receive'">
                                 <button class="bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md"
                                     @click="acceptRequestAddFriend">Đồng ý</button>
-                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Nhắn tin</button>
+                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Nhắn
+                                    tin</button>
                             </template>
                         </div>
                     </div>
@@ -84,6 +94,8 @@
         </template>
 
         <Error v-else class="w-full !h-full"></Error>
+        <ProfileEdit v-if="isDisplayProfileEdit" @on-close="isDisplayProfileEdit = false" @on-save="onUpdateProfile"
+            :account="accountStore.clone()"></ProfileEdit>
 
     </div>
 </template>
@@ -95,6 +107,7 @@ import Avatar from '@/components/Avatar.vue'
 import Error from '@/components/Error.vue'
 import ImageModal from '@/components/ImageModal.vue'
 import PostList from '@/components/PostList.vue'
+import ProfileEdit from '@/components/ProfileEdit.vue'
 import { uploadFileToCloudinary } from '@/helpers'
 import { useAccountStore } from '@/stores/account'
 import { useAccountsStore } from '@/stores/accounts'
@@ -111,6 +124,7 @@ const accountsStore = useAccountsStore()
 const posts = ref([])
 const imageModalSource = ref('')
 const isDisplayImageModal = ref(false)
+const isDisplayProfileEdit = ref(false)
 
 const accountId = computed(() => route.params.id)
 const account = ref(null)
@@ -222,9 +236,26 @@ function acceptRequestAddFriend() {
 
 function cancelRequestAddFriend() {
     axiosConfig().delete(`/requestAddFriend/${accountId.value}/${accountStore._id}/cancel`)
-    .then(result => {
-        relationship.value = 'none'
-    })
-    .catch(console.log)
+        .then(result => {
+            relationship.value = 'none'
+        })
+        .catch(console.log)
+}
+
+function onUpdateProfile({ newAccount }) {
+    accountStore.update(newAccount)
+    accountsStore.accountMap.set(newAccount._id, newAccount)
+    account.value = accountStore.clone()
+    isDisplayProfileEdit.value = false
+}
+
+function deleteFriendRequest(accountIndex) {
+    console.log(`${accountStore._id} / ${accountId.value}`)
+
+    axiosConfig().delete(`/friend/${accountStore._id}/${accountId.value}`)
+        .then(result => {
+            relationship.value = 'none'
+        })
+        .catch(console.log)
 }
 </script>

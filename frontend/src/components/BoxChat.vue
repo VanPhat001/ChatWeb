@@ -16,21 +16,21 @@
                     </Avatar>
 
                     <div class="px-2">
-                        <p>{{ room.roomName }}</p>
+                        <p class="line-clamp-1">{{ room.roomName }}</p>
                         <p class="text-[10px] opacity-75">{{ activeTimeString() }}</p>
                     </div>
                 </div>
 
                 <!-- controls -->
-                <div class="ml-auto">
+                <div class="ml-auto text-nowrap">
                     <button @click="onCallClick" class="text-[#0084ff] px-3 py-2 rounded-md hover:bg-gray-700">
                         <Icon icon="material-symbols:call" height="22"></Icon>
                     </button>
-                    <button @click="onCameraClick" class="text-[#0084ff] px-3 py-2 rounded-md hover:bg-gray-700 ml-1">
+                    <button @click="onCameraClick" class="text-[#0084ff] px-3 py-2 rounded-md hover:bg-gray-700 ml-0.5">
                         <Icon icon="jam:video-camera-f" height="22"></Icon>
                     </button>
-                    <button @click="onInfoClick" class="text-[#0084ff] px-3 py-2 rounded-md hover:bg-gray-700 ml-1">
-                        <Icon icon="jam:info-f" height="22"></Icon>
+                    <button @click="onInfoClick" class="text-[#0084ff] px-3 py-2 rounded-md hover:bg-gray-700 ml-0.5">
+                        <Icon :icon="infoIcon" height="22"></Icon>
                     </button>
                 </div>
             </div>
@@ -102,6 +102,10 @@ const socketStore = useSocketStore()
 const props = defineProps({
     roomId: {
         required: true
+    },
+    infoIcon: {
+        type: String,
+        default: 'jam:info-f'
     }
 })
 
@@ -115,6 +119,7 @@ const text = ref('')
 const roomAvatar = ref('')
 const messages = ref([])
 const roomId = computed(() => props.roomId)
+const infoIcon = computed(() => props.infoIcon)
 const socket = computed(() => socketStore.socket)
 
 initData()

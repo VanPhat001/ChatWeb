@@ -13,11 +13,11 @@
         </p>
 
         <div class="flex items-start mt-3 px-5" v-for="(cmt, index) in comments" :key="index">
-            <Avatar :size="44" :src="getAvatar(cmt.accountId)"></Avatar>
+            <Avatar :size="44" :src="getAvatar(cmt.accountId)" :account-id="cmt.accountId"></Avatar>
             <div class="flex-1 pl-1.5">
                 <div class="bg-[#3a3b3c] rounded-lg px-2 py-1 w-fit">
                     <p class="text-[104%] text-white">{{ getName(cmt.accountId) }}</p>
-                    <p class="text-[90%] opacity-85">Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquid placeat, earum porro voluptates eveniet accusamus, labore laborum asperiores corrupti esse officiis dolor voluptate totam! Explicabo nesciunt at obcaecati veniam dignissimos. {{ cmt.text }}</p>
+                    <p ref="commentTextEls" class="text-[90%] opacity-85"> {{ cmt.text }} </p>
                 </div>
                 <span class="ml-2 italic text-[84%] opacity-80 hover:text-blue-500 cursor-pointer">Phản hồi</span>
                 <span class="italic text-[66%] opacity-80"> • {{ calcTimeActive(cmt.createdAt) }}</span>
@@ -35,11 +35,12 @@
 
 <script setup>
 import axiosConfig from '@/axiosConfig'
-import { computed, inject, ref } from 'vue'
+import { computed, inject, onMounted, onUpdated, ref } from 'vue'
 import Avatar from './Avatar.vue'
-import { getDifferenceBetween2Date } from '@/helpers';
-import { useAccountsStore } from '@/stores/accounts';
-import { useAccountStore } from '@/stores/account';
+import { getDifferenceBetween2Date } from '@/helpers'
+import { useAccountsStore } from '@/stores/accounts'
+import { useAccountStore } from '@/stores/account'
+import { isValidHttpUrl } from '@/helpers'
 
 const emits = defineEmits(['onCreateNewComment'])
 const props = defineProps({
@@ -57,6 +58,7 @@ const props = defineProps({
     }
 })
 
+const commentTextEls = ref(null)
 const showMoreButton = ref(null)
 const authorAccount = computed(() => props.authorAccount)
 const postId = computed(() => props.postId)
@@ -70,7 +72,7 @@ const fetchFinish = ref(false)
 const inputEl = ref(null)
 const text = ref('')
 const comments = ref([])
-const fetchCommentSize = 4
+const fetchCommentSize = 8
 
 fetchComments({ limit: fetchCommentSize })
     .then(_comments => {
@@ -82,6 +84,32 @@ fetchComments({ limit: fetchCommentSize })
         fetchFinish.value = true
     })
     .catch(console.log)
+
+
+onMounted(() => {
+    formatCommentString()
+})
+
+onUpdated(() => {
+    formatCommentString()
+})
+
+function formatCommentString() {
+    if (commentTextEls.value === null) {
+        return
+    }
+
+    commentTextEls.value.forEach(htmlElement => {
+        const text = htmlElement.textContent.replace(String.fromCharCode(160), ' ')
+        const words = text.split(' ', )
+        htmlElement.innerHTML = words.map(word => {
+            if (isValidHttpUrl(word)) {
+                return `<span><a class="text-blue-400 hover:text-blue-500 underline" target="_blank" href="${word}">${word}</a></span>`
+            }
+            return word
+        }).join(' ')
+    })
+}
 
 function updateText() {
     text.value = inputEl.value.textContent
@@ -163,4 +191,6 @@ function continueFetchComments() {
             showMoreButton.value.disabled = false
         })
 }
+
+
 </script>

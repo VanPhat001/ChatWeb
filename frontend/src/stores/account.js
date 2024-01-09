@@ -44,6 +44,44 @@ export const useAccountStore = defineStore('account', () => {
         }
     }
 
+    function update(account) {
+        const keys = Object.keys(account)
+
+        if (keys.includes('_id')) {
+            _id.value = account._id
+        }
+        if (keys.includes('username')) {
+            username.value = account.username
+        }
+        if (keys.includes('name')) {
+            name.value = account.name
+        }
+        if (keys.includes('gender')) {
+            gender.value = account.gender
+        }
+        if (keys.includes('avatar')) {
+            avatar.value = account.avatar
+        }
+        if (keys.includes('background')) {
+            background.value = account.background
+        }
+        if (keys.includes('dateOfBirth')) {
+            dateOfBirth.value = account.dateOfBirth
+        }
+        if (keys.includes('roomContainerId')) {
+            roomContainerId.value = account.roomContainerId
+        }
+        if (keys.includes('postContainerId')) {
+            postContainerId.value = account.postContainerId
+        }
+        if (keys.includes('friendContainerId')) {
+            friendContainerId.value = account.friendContainerId
+        }
+        if (keys.includes('requestAddFriendContainerId')) {
+            requestAddFriendContainerId.value = account.requestAddFriendContainerId
+        }
+    }
+
     function clone() {
         return {
             _id: _id.value,
@@ -63,6 +101,6 @@ export const useAccountStore = defineStore('account', () => {
     return {
         _id, username, name, gender, avatar, background, dateOfBirth, roomContainerId,
         postContainerId, friendContainerId, requestAddFriendContainerId,
-        fetchAccount, clone
+        fetchAccount, clone, update
     }
 })

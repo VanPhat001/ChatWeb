@@ -29,7 +29,7 @@
                 <span class="opacity-75">{{ post.likes.length }} lượt thích</span>
             </div>
             <div class="ml-auto flex">
-                <div class="flex items-center ml-2">
+                <div @click="openPostView" class="hover:text-blue-400 cursor-pointer flex items-center ml-2">
                     <span class="opacity-75">{{ post.commentCount }} bình luận</span>
                 </div>
                 <div class="flex items-center ml-2">
