@@ -38,8 +38,8 @@
 
             </div>
 
-            <button @click="createPost" class="bg-[#505151] w-full py-1.5 rounded-lg text-[#858586]"
-                :class="{ 'bg-blue-500 text-white': visiblePostButton }" :disabled="!visiblePostButton">Đăng</button>
+            <button @click="createPost" class="disabled:bg-[#505151] disabled:text-[#858586] w-full py-1.5 rounded-lg bg-blue-500 text-white"
+                :disabled="!visiblePostButton">Đăng</button>
         </div>
     </div>
 </template>
@@ -101,6 +101,7 @@ function removeImage() {
 function resetData() {
     imageUrl.value = ''
     text.value = ''
+    inputEl.value.textContent = ''
 }
 
 function updateText() {

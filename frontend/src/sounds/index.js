@@ -22,6 +22,18 @@ function playReceiveMessageSound() {
     }
 }
 
+function playOpenMiniChatSound() {
+    try {
+        const audio = new Audio('/open-minichat-sound.mp3')
+        audio.play()
+
+        return audio
+    } catch (error) {
+        console.log(error)
+        return null
+    }
+}
+
 function playIncommingCall() {
     try {
         const audio = new Audio('/incomming-call.mp3')
@@ -47,5 +59,6 @@ export {
     playSendMessageSound,
     playReceiveMessageSound,
     playIncommingCall,
-    stopAudio
+    stopAudio,
+    playOpenMiniChatSound
 }

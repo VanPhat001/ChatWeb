@@ -23,7 +23,7 @@
 
             <!-- rooms -->
             <div v-show="!showResultBox" class="flex-1 h-full overflow-y-auto px-2">
-                <template v-for="(roomId, index) in roomIdSet" :key="index">
+                <template v-for="(roomId, index) in roomIdArray" :key="index">
                     <div class="room relative p-2 rounded-lg flex hover:bg-gray-600 pr-8" :set="room = roomMap.get(roomId)"
                         @click="selectRoom(roomId)">
                         <div v-show="!room.seen"
@@ -35,7 +35,8 @@
                         <div class="flex-1 pl-2 flex flex-col justify-center">
                             <p>{{ room.roomName }}</p>
                             <div class="text-[80%] flex opacity-60" :class="{ '!opacity-100': !room.seen }">
-                                <p class="line-clamp-1">{{ room.latestMessage?.text }}</p>
+                                <p class="line-clamp-1" v-if="room.latestMessage?.text">{{ room.latestMessage?.text }}</p>
+                                <p v-else-if="room.latestMessage?.image">[hình ảnh]</p>
                                 <p class="ml-auto whitespace-nowrap">{{ getDifferenceBetween2Date(new Date(), new Date(room.latestMessage?.createdAt)) }}</p>
                             </div>
                         </div>
@@ -78,7 +79,7 @@ import { useAccountsStore } from '@/stores/accounts'
 import { useRoomsStore } from '@/stores/rooms'
 import { useSocketStore } from '@/stores/socket'
 import { Icon } from '@iconify/vue'
-import { computed, inject, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, inject, onBeforeUnmount, onBeforeUpdate, ref, watch } from 'vue'
 import Debounce from '../helpers/Debounce'
 import { getDifferenceBetween2Date } from '@/helpers'
 
@@ -94,10 +95,31 @@ const searchResultArray = ref([])
 const showResultBox = ref(false)
 const currentRoomId = ref(null)
 const searchText = ref('')
-const cookies = inject('$cookies')
+
 
 const accountMap = computed(() => accountsStore.accountMap)
 const roomMap = computed(() => roomsStore.roomMap)
+const roomIdArray = computed(() => {
+    const returnData = []
+    const roomTemp = []
+
+    roomIdSet.value.forEach(roomId => {
+        const room = roomsStore.get(roomId)
+        const latestMessage = room.latestMessage
+
+        if (latestMessage) {
+            roomTemp.push({ roomId, createdAt: latestMessage.createdAt })
+        } else {
+            returnData.push(roomId)
+        }
+    })
+    
+    roomTemp.sort((a, b) => {
+        return a.createdAt < b.createdAt ? 1 : -1
+    })
+
+    return returnData.concat(roomTemp.map(item => item.roomId))
+})
 
 const debounce = new Debounce(() => {
     findAccountsByRegex()
@@ -108,6 +130,22 @@ watch(() => searchText.value, (__) => {
 })
 
 
+onBeforeUnmount(() => {
+    let index = socketStore.resSendMessageActions.indexOf(receiveMessageFromSocketServer)
+    if (index != -1) {
+        socketStore.resSendMessageActions.splice(index, 1)
+    }
+
+    index = socketStore.resSendMessageActions.indexOf(clientOnline)
+    if (index != -1) {
+        socketStore.resSendMessageActions.splice(index, 1)
+    }
+
+    index = socketStore.resSendMessageActions.indexOf(clientOffline)
+    if (index != -1) {
+        socketStore.resSendMessageActions.splice(index, 1)
+    }
+})
 
 // console.log({ tookenInRoom: cookies.get('access_token') })
 // console.log({ default: axiosConfig().defaults })
@@ -177,22 +215,6 @@ axiosConfig().get('/roomContainer')
     })
     .catch(err => console.log(err))
 
-onBeforeUnmount(() => {
-    let index = socketStore.resSendMessageActions.indexOf(receiveMessageFromSocketServer)
-    if (index != -1) {
-        socketStore.resSendMessageActions.splice(index, 1)
-    }
-
-    index = socketStore.resSendMessageActions.indexOf(clientOnline)
-    if (index != -1) {
-        socketStore.resSendMessageActions.splice(index, 1)
-    }
-
-    index = socketStore.resSendMessageActions.indexOf(clientOffline)
-    if (index != -1) {
-        socketStore.resSendMessageActions.splice(index, 1)
-    }
-})
 
 function findAccountsByRegex() {
     if (searchText.value == '') {

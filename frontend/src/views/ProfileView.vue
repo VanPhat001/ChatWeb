@@ -3,9 +3,13 @@
 
         <template v-if="account">
             <div class="bg-transparent pb-2 relative overflow-hidden">
-                <img :src="account.background"
-                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 blur-[24px] h-full w-[300%]"
-                    alt="">
+                
+                <div class="absolute inset-0 -z-10">
+                    <img :src="account.background"
+                        class="absolute bottom-[28%] left-1/2 -translate-x-1/2 blur-[24px] h-full w-[300%]"
+                        alt="">
+                    <div class="bg-[#242526]/80 w-full h-full"></div>
+                </div>
 
 
                 <div class="w-[80%] m-auto">
@@ -23,7 +27,7 @@
 
                     <div class="px-8 flex h-[calc(152px*2/3+12px)]">
                         <div class="group/avatar -translate-y-1/3 relative ">
-                            <Avatar @click="showImageModal(account.avatar)" class="rounded-full border-4 border-[#3d3a3a]"
+                            <Avatar @click="showImageModal(account.avatar)" class="rounded-full border-4 border-[#242526]"
                                 :src="account.avatar" :size="152">
                             </Avatar>
                             <!-- change avatar button -->
@@ -63,25 +67,29 @@
                                 <button class="bg-gray-600 hover:bg-gray-700 text-gray-200 px-6 py-1 rounded-md"
                                     @click="deleteFriendRequest">Huỷ kết
                                     bạn</button>
-                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Nhắn
+                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md"
+                                    @click="openMiniChat">Nhắn
                                     tin</button>
                             </template>
                             <template v-else-if="relationship == 'none'">
                                 <button class="bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md"
                                     @click="sendRequestAddFriend">Thêm bạn bè</button>
-                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Nhắn
+                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md"
+                                    @click="openMiniChat">Nhắn
                                     tin</button>
                             </template>
                             <template v-else-if="relationship == 'send'">
                                 <button class="bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md"
                                     @click="cancelRequestAddFriend">Huỷ lời mời</button>
-                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Nhắn
+                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md"
+                                    @click="openMiniChat">Nhắn
                                     tin</button>
                             </template>
                             <template v-else-if="relationship == 'receive'">
                                 <button class="bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md"
                                     @click="acceptRequestAddFriend">Đồng ý</button>
-                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md">Nhắn
+                                <button class="ml-1 bg-blue-500 hover:bg-blue-600 text-gray-200 px-6 py-1 rounded-md"
+                                    @click="openMiniChat">Nhắn
                                     tin</button>
                             </template>
                         </div>
@@ -94,8 +102,9 @@
         </template>
 
         <Error v-else class="w-full !h-full"></Error>
-        <ProfileEdit v-if="isDisplayProfileEdit" @on-close="isDisplayProfileEdit = false" @on-save="onUpdateProfile"
-            :account="accountStore.clone()"></ProfileEdit>
+        <ProfileEdit v-if="isDisplayProfileEdit" @on-close="isDisplayProfileEdit = false"
+            @on-cancel="isDisplayProfileEdit = false" @on-save="onUpdateProfile" :account="accountStore.clone()">
+        </ProfileEdit>
 
     </div>
 </template>
@@ -111,16 +120,19 @@ import ProfileEdit from '@/components/ProfileEdit.vue'
 import { uploadFileToCloudinary } from '@/helpers'
 import { useAccountStore } from '@/stores/account'
 import { useAccountsStore } from '@/stores/accounts'
+import { useRoomsStore } from '@/stores/rooms'
 import { Icon } from '@iconify/vue'
-import { computed, provide, ref } from 'vue'
+import { computed, inject, provide, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 
 provide('showImageModal', showImageModal)
+const showMiniChat = inject('showMiniChat')
 
 const route = useRoute()
 const accountStore = useAccountStore()
 const accountsStore = useAccountsStore()
+const roomsStore = useRoomsStore()
 const posts = ref([])
 const imageModalSource = ref('')
 const isDisplayImageModal = ref(false)
@@ -255,6 +267,21 @@ function deleteFriendRequest(accountIndex) {
     axiosConfig().delete(`/friend/${accountStore._id}/${accountId.value}`)
         .then(result => {
             relationship.value = 'none'
+        })
+        .catch(console.log)
+}
+
+function openMiniChat() {
+
+    axiosConfig().post('/room', {
+        accountId1: accountStore._id,
+        accountId2: accountId.value
+    })
+        .then(result => {
+            const room = result.data.room
+            accountsStore.addOne(account.value)
+            roomsStore.addOne(room)
+            showMiniChat(room._id)
         })
         .catch(console.log)
 }

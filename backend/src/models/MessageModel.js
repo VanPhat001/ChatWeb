@@ -10,7 +10,12 @@ const schema = new Schema({
         required: true
     },
     text: {
-        type: String
+        type: String,
+        default: null
+    },
+    image: {
+        type: String,
+        default: null
     }
 }, { timestamps: true })
 

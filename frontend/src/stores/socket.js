@@ -78,11 +78,28 @@ export const useSocketStore = defineStore('socket', () => {
         socket.value.emit('register-client-info', { accountId })
     }
 
+    function reset() {
+        if (socket.value) {
+            socket.value.disconnect()
+        }
+
+        socket.value = null
+        resSendMessageActions = []
+        resCallActions = []
+        resAcceptCallActions = []
+        resRejectCallActions = []
+        callReadyActions = []
+        callCloseActions = []
+        toggleSoundActions = []
+        clientOnlineActions = []
+        clientOfflineActions = []
+    }
+
     return {
         socket, resSendMessageActions, clientOnlineActions, clientOfflineActions, resCallActions,
         resAcceptCallActions, resRejectCallActions, callReadyActions, callCloseActions,
         toggleSoundActions,
         connectToSocketServer,
-        registerClientInfo,
+        registerClientInfo, reset
     }
 })

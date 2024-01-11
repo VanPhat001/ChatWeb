@@ -38,13 +38,13 @@ module.exports = (io, socket) => {
 
 
 
-    socket.on('req-send-message', async ({ sender, roomId, text }) => {
+    socket.on('req-send-message', async ({ sender, roomId, text, image }) => {
         try {
             console.log('📩📩 incomming message: ' + text)
 
             const tasks = [
                 roomService.getOne({ _id: roomId }),
-                createMessage(sender, roomId, text)
+                createMessage(sender, roomId, text, image)
             ]
 
             const [roomDoc, message] = await Promise.all(tasks)
@@ -104,12 +104,13 @@ module.exports = (io, socket) => {
 }
 
 
-async function createMessage(sender, roomId, text) {
+async function createMessage(sender, roomId, text, image) {
     try {
         const messageDoc = await messageService.create({
             sender,
             roomId,
-            text
+            text, 
+            image
         })
 
         await roomService.updateOne(roomId, {

@@ -12,7 +12,8 @@
                 <!-- info -->
                 <div class="flex">
                     <!-- <img :src="roomAvatar" alt="avatar" class="w-[40px] h-[40px] rounded-full inline-block"> -->
-                    <Avatar :size="40" :src="room.avatar" :active="false" :bottom-percent="-4" :right-percent="-4" :account-id="room.isRoom ? null : getFirstAnotherMemberId()">
+                    <Avatar :size="40" :src="room.avatar" :active="false" :bottom-percent="-4" :right-percent="-4"
+                        :account-id="room.isRoom ? null : getFirstAnotherMemberId()">
                     </Avatar>
 
                     <div class="px-2">
@@ -47,13 +48,15 @@
                             <Avatar :active="false" :src="accountsStore.get(item.sender).avatar" :size="32"
                                 v-if="showAvatar(index)"></Avatar>
                         </div>
-                        <p class="mx-2 max-w-[66%] bg-[#303030] px-3 py-1 rounded-xl"
+                        <p v-if="item.text" class="mx-2 max-w-[66%] bg-[#303030] px-3 py-1 rounded-xl"
                             :title="`${new Date(item.createdAt).toLocaleString()}`">{{ item.text }}</p>
+                        <img v-if="item.image" class="mx-2 w-[156px] rounded-md" :src="item.image" alt="">
                     </template>
 
                     <template v-else>
-                        <p class="ml-auto max-w-[66%] bg-[#0084ff] px-3 py-1 rounded-xl"
+                        <p v-if="item.text" class="ml-auto max-w-[66%] bg-[#0084ff] px-3 py-1 rounded-xl"
                             :title="`${new Date(item.createdAt).toLocaleString()}`">{{ item.text }}</p>
+                        <img v-if="item.image" class="ml-auto w-[156px] rounded-md" :src="item.image" alt="">
                     </template>
                 </div>
 
@@ -61,13 +64,32 @@
             </div>
 
             <!-- input box -->
-            <div class="box-bottom flex p-2 items-center">
-                <textarea v-model="text" autofocus @keydown.enter.prevent="sendMessage" rows="1"
-                    class="outline-none resize-none flex-1 px-2 py-1 bg-[#3a3b3c] rounded-xl"
-                    placeholder="Enter to submit..."></textarea>
-                <button @click="sendMessage" class="px-2 py-1 text-[#0084ff] hover:bg-gray-700 ml-1 rounded-md">
-                    <Icon icon="material-symbols:send-rounded" height="24"></Icon>
-                </button>
+            <div class="box-bottom p-2">
+                <div class="text-nowrap overflow-y-auto">
+                    <!-- <img  class="inline-block px-2 py-1.5 rounded-lg h-[72px]" :src="image" alt=""> -->
+                    <div class="relative inline-block" v-if="image !== null">
+                        <img class="inline-block px-2 py-1.5 rounded-lg h-[80px]" :src="image" alt="">
+                        <button
+                            class="absolute right-2 top-2 translate-x-1/2 -translate-y-1/2 rounded-full bg-white/65 hover:bg-white/80 text-black/60"
+                            @click="image = null">
+                            <Icon icon="mingcute:close-line"></Icon>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex">
+                    <button class="px-2 py-1 text-[#0084ff] hover:bg-gray-700 mr-1 rounded-md" @click="openImageBox">
+                        <Icon icon="material-symbols:image" height="24"></Icon>
+                    </button>
+
+                    <textarea v-model="text" autofocus @keydown.enter.prevent="sendMessage" rows="1"
+                        class="outline-none resize-none flex-1 px-2 py-1 bg-[#3a3b3c] rounded-xl"
+                        placeholder="Enter to submit..."></textarea>
+
+                    <button @click="sendMessage" class="px-2 py-1 text-[#0084ff] hover:bg-gray-700 ml-1 rounded-md">
+                        <Icon icon="material-symbols:send-rounded" height="24"></Icon>
+                    </button>
+                </div>
             </div>
         </template>
 
@@ -84,7 +106,7 @@ import { Icon } from '@iconify/vue'
 import { computed, inject, onBeforeUnmount, onBeforeUpdate, onUpdated, ref, watch } from 'vue'
 import { playSendMessageSound } from '@/sounds'
 import Avatar from './Avatar.vue'
-import { getDifferenceBetween2Date } from '@/helpers'
+import { getDifferenceBetween2Date, uploadFileToCloudinary } from '@/helpers'
 import router from '@/router'
 
 
@@ -118,6 +140,8 @@ const room = ref(null)
 const text = ref('')
 const roomAvatar = ref('')
 const messages = ref([])
+const image = ref(null)
+
 const roomId = computed(() => props.roomId)
 const infoIcon = computed(() => props.infoIcon)
 const socket = computed(() => socketStore.socket)
@@ -130,8 +154,12 @@ onBeforeUpdate(() => {
         return
     }
 
-    const { scrollTop, scrollHeight, clientHeight } = messageListEl.value
-    allowScrollToBottom.value = (scrollHeight - scrollTop == clientHeight)
+    try {
+        const { scrollTop, scrollHeight, clientHeight } = messageListEl.value
+        allowScrollToBottom.value = (scrollHeight - scrollTop == clientHeight)
+    } catch (error) {
+        console.log(error)
+    }
 })
 
 onUpdated(() => {
@@ -167,16 +195,25 @@ async function initData(_limit = 20) {
 
 
 function sendMessage() {
-    if (!text.value.trim()) {
+    if (!text.value.trim() && image.value === null) {
         return
     }
 
     try {
-        socket.value.emit('req-send-message', {
+        const payload = {
             sender: accountStore._id,
             roomId: roomId.value,
-            text: text.value
-        })
+        }
+
+        if (text.value) {
+            payload.text = text.value
+        }
+
+        if (image.value) {
+            payload.image = image.value
+        }
+
+        socket.value.emit('req-send-message', payload)
 
         playSendMessageSound()
     } catch (error) {
@@ -184,6 +221,7 @@ function sendMessage() {
     }
 
     text.value = ''
+    image.value = null
 }
 
 function receiveMessageFromSocketServer(msg) {
@@ -305,6 +343,13 @@ function getFirstAnotherMemberId() {
     const members = _room.members
     const partnerId = (members[0] == accountStore._id ? members[1] : members[0])
     return partnerId
+}
+
+function openImageBox() {
+    uploadFileToCloudinary((result) => {
+        const { url, public_id } = result.info
+        image.value = url
+    })
 }
 
 </script>

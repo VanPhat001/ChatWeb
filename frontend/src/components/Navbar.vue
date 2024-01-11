@@ -25,7 +25,7 @@
 
         </div>
         <router-link :to="{ name: 'profile', params: { id: accountId } }" class="w-[280px] flex justify-end items-center px-3">
-            <p class="mr-2 text-[18px]">{{ accountStore.name }}</p>
+            <p class="mr-2 text-[18px] line-clamp-1">{{ accountStore.name }}</p>
             <Avatar :size="44" :src="accountStore.avatar" :active="true" :bottom-percent="-4" :right-percent="-4"></Avatar>
         </router-link>
 

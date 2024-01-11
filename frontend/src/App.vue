@@ -1,50 +1,50 @@
 <style scoped>
 .animation-appear {
-  animation-name: appear;
-  animation-duration: .4s;
-  animation-iteration-count: 1;
+    animation-name: animation-appear;
+    animation-duration: .4s;
+    animation-iteration-count: 1;
 }
 
 .animation-close {
-  animation-name: close;
-  animation-duration: .4s;
-  animation-iteration-count: 1;
-  animation-fill-mode: both;
+    animation-name: animation-close;
+    animation-duration: .4s;
+    animation-iteration-count: 1;
+    animation-fill-mode: both;
 }
 
-@keyframes appear {
-  from {
-    height: 0;
-  }
+@keyframes animation-appear {
+    from {
+        height: 0;
+    }
 }
 
-@keyframes close {
-  to {
-    height: 0;
-    border-width: 0;
-  }
+@keyframes animation-close {
+    to {
+        height: 0;
+        border-width: 0;
+    }
 }
 </style>
 
 
 <template>
-  <div class="w-screen h-screen">
-    <header ref="headerEl">
-      <Navbar v-show="showNavbar"></Navbar>
-    </header>
-    <main ref="mainEl">
-      <RouterView></RouterView>
-      <!-- <NuxtWelcome /> -->
-    </main>
-    <Loading :class="{ 'hidden': !showLoading }"></Loading>
-    <IncommingCall @on-accept="onAcceptCall" @on-reject="onRejectCall" v-if="showIncommingCall"
-      class="fixed top-5 left-1/2 -translate-x-1/2"></IncommingCall>
+    <div class="w-screen h-screen">
+        <header ref="headerEl">
+            <Navbar v-show="showNavbar"></Navbar>
+        </header>
+        <main ref="mainEl">
+            <RouterView></RouterView>
+            <!-- <NuxtWelcome /> -->
+        </main>
+        <Loading :class="{ 'hidden': !showLoading }"></Loading>
+        <IncommingCall @on-accept="onAcceptCall" @on-reject="onRejectCall" v-if="showIncommingCall"
+            class="fixed top-5 left-1/2 -translate-x-1/2"></IncommingCall>
 
-    <!-- 6599b9548d592c4bf98a5f04 -->
-    <BoxChat v-if="!['login', 'call', 'chat'].includes(route.name) && isDisplayMiniChat"
-      class="animation-appear fixed bottom-0 right-20 w-[340px] h-[400px] border-blue-400 border rounded-md bg-black"
-      :room-id="miniChatId" :info-icon="'mingcute:close-fill'" @on-info="closeMiniChat"></BoxChat>
-  </div>
+        <!-- 6599b9548d592c4bf98a5f04 -->
+        <BoxChat v-if="!['login', 'call', 'chat'].includes(route.name) && isDisplayMiniChat"
+            class="animation-appear fixed bottom-0 right-20 !w-[340px] !h-[400px] border-blue-400 border rounded-md bg-black"
+            :room-id="miniChatId" :info-icon="'mingcute:close-fill'" @on-info="closeMiniChat"></BoxChat>
+    </div>
 </template>
 
 <script setup>
@@ -61,6 +61,7 @@ import IncommingCall from './components/IncommingCall.vue'
 import { useAccountsStore } from './stores/accounts'
 import BoxChat from './components/BoxChat.vue'
 import { useRoomsStore } from './stores/rooms'
+import { playOpenMiniChatSound } from '@/sounds'
 
 const route = useRoute()
 const accountStore = useAccountStore()
@@ -75,136 +76,163 @@ const showIncommingCall = ref(false)
 const isDisplayMiniChat = ref(false)
 const miniChatId = ref('')
 const incommingData = reactive({
-  accountIdFrom: '-',
-  accountIdTo: '-',
+    accountIdFrom: '-',
+    accountIdTo: '-',
 })
 
 const accessToken = cookies.get('access_token')
-const showNavbar = computed(() => route.name != 'login' && route.name != 'error')
+const showNavbar = computed(() => // route.name != 'login' && route.name != 'error' 
+    !['login', 'error'].includes(route.name))
 
+provide('showMiniChat', showMiniChat)
 
 
 if (!accessToken) {
-  removeLoadingElement()
-  router.push({ name: 'login' })
+    removeLoadingElement()
+    router.push({ name: 'login' })
 }
 
 axiosConfig().post('/verify')
-  .then(result => {
-    const { status } = result.data
+    .then(result => {
+        const { status } = result.data
 
-    if (status != 'success') {
-      router.push({ name: 'login' })
-    }
+        if (status != 'success') {
+            router.push({ name: 'login' })
+        }
 
-    accountStore.fetchAccount(accessToken)
-    socketStore.connectToSocketServer()
-    socketStore.resSendMessageActions.push(initDataBeforeRenderMiniChat)
-    socketStore.resCallActions.push(onIncommingCall)
+        accountStore.fetchAccount(accessToken)
+        socketStore.connectToSocketServer()
+        socketStore.resSendMessageActions.push(initDataBeforeRenderMiniChat)
+        socketStore.resCallActions.push(onIncommingCall)
 
-    const id = setInterval(() => {
-      if (socketStore.socket !== null && accountStore._id !== null) {
-        clearInterval(id)
+        const id = setInterval(() => {
+            if (socketStore.socket !== null && accountStore._id !== null) {
+                clearInterval(id)
 
-        const account = accountStore.clone()
-        accountsStore.addOne(account)
-        socketStore.registerClientInfo(accountStore._id)
-        const mediaCall = new MediaCall(accountStore._id, _mediaCall => { })
-        window.mediaCall = mediaCall
+                const account = accountStore.clone()
+                accountsStore.addOne(account)
+                socketStore.registerClientInfo(accountStore._id)
+                const mediaCall = new MediaCall(accountStore._id, _mediaCall => { })
+                window.mediaCall = mediaCall
 
-        removeLoadingElement()
-        // test()
-      }
-    }, 100)
-  })
-  .catch(err => {
-    console.log(err)
-    router.push({ name: 'login' })
-  })
+                removeLoadingElement()
+                // test()
+            }
+        }, 100)
+    })
+    .catch(err => {
+        console.log(err)
+        router.push({ name: 'login' })
+    })
 
 
 
 
 onMounted(() => {
-  updateMainContentHeight()
+    updateMainContentHeight()
 
-  window.addEventListener('resize', updateMainContentHeight)
+    window.addEventListener('resize', updateMainContentHeight)
 })
 
 onBeforeMount(() => {
-  // socketStore.resCallActions = socketStore.resCallActions.filter(func => func != onIncommingCall)
+    // socketStore.resCallActions = socketStore.resCallActions.filter(func => func != onIncommingCall)
 })
 
 
 function updateMainContentHeight() {
-  const h = window.innerHeight - headerEl.value.clientHeight
-  mainEl.value.style.height = h + 'px'
+    try {
+        const h = window.innerHeight - headerEl.value.clientHeight
+        mainEl.value.style.height = h + 'px'
+    } catch (error) {
+        console.log(error)        
+    }
 }
 
 function removeLoadingElement() {
-  showLoading.value = false
+    showLoading.value = false
 }
 
-function initDataBeforeRenderMiniChat(message) {
-  const roomId = message.roomId
+function showMiniChat(roomId) {
+    miniChatId.value = roomId
+    isDisplayMiniChat.value = true
+    playOpenMiniChatSound()
+}
 
-  axiosConfig().get(`/room/${roomId}`)
-    .then(result => {
-      const room = result.data.room
-      roomStore.addOne(room)
+async function initDataBeforeRenderMiniChat(message) {
+    if (isDisplayMiniChat.value) {
+        return
+    }
 
-      return axiosConfig().post(`/account/list`, {
-        accountIdArray: room.members
-      })
+    const roomId = message.roomId
+    let _room
 
-    })
-    .then(result => {
-      accountsStore.addMany(result.data.accounts)
+    try {
+        if (roomStore.contain(roomId)) {
+            _room = roomStore.get(roomId)
+        } else {
+            const result = await axiosConfig().get(`/room/${roomId}`)
+            _room = result.data.room
+            roomStore.addOne(_room)
+        }
 
-      setTimeout(() => {
-        miniChatId.value = roomId
-        isDisplayMiniChat.value = true
-      }, 2000);
-    })
-    .catch(console.log)
+        let isFecthMembers = false
+        for (let i = 0; i < _room.members.length; i++) {
+            const accId = _room.members[i]
+            if (!accountsStore.contain(accId)) {
+                isFecthMembers = true
+                break
+            }
+        }
+
+        if (isFecthMembers) {
+            const result = await axiosConfig().post(`/account/list`, {
+                accountIdArray: _room.members
+            })
+            accountsStore.addMany(result.data.accounts)
+        }
+
+        showMiniChat(roomId)
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 function closeMiniChat() {
-  console.log('close mini chat')
-  document.querySelector('.box-chat')?.classList.add('animation-close')
+    console.log('close mini chat')
+    // document.querySelector('.box-chat')?.classList.add('animation-close')
 
-  setTimeout(() => {
+    // setTimeout(() => {
     isDisplayMiniChat.value = false
     miniChatId.value = ''
-  }, 500);
+    // }, 500);
 }
 
 //#region CALL --- RECIPIENT SIDE
 // recipient side
 function onIncommingCall({ accountIdFrom, accountIdTo }) {
-  // console.log({ accountIdFrom, accountIdTo })
-  incommingData.accountIdFrom = accountIdFrom
-  incommingData.accountIdTo = accountIdTo
-  showIncommingCall.value = true
+    // console.log({ accountIdFrom, accountIdTo })
+    incommingData.accountIdFrom = accountIdFrom
+    incommingData.accountIdTo = accountIdTo
+    showIncommingCall.value = true
 }
 
 // recipient side
 function onAcceptCall() {
-  showIncommingCall.value = false
-  router.push({
-    name: 'call',
-    params: { partnerId: incommingData.accountIdFrom },
-    query: { recevie: true }
-  })
+    showIncommingCall.value = false
+    router.push({
+        name: 'call',
+        params: { partnerId: incommingData.accountIdFrom },
+        query: { recevie: true }
+    })
 }
 
 // recipient side
 function onRejectCall() {
-  showIncommingCall.value = false
-  socketStore.socket.emit('req-reject-call', {
-    accountIdFrom: incommingData.accountIdFrom,
-    accountIdTo: incommingData.accountIdTo
-  })
+    showIncommingCall.value = false
+    socketStore.socket.emit('req-reject-call', {
+        accountIdFrom: incommingData.accountIdFrom,
+        accountIdTo: incommingData.accountIdTo
+    })
 }
 //#endregion
 </script>
